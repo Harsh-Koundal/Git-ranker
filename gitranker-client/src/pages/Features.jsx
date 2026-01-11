@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Code, TrendingUp, Award, Users, BarChart3, Target, Zap, Shield, Globe, GitBranch, Star, Activity, Trophy, Sparkles, ChevronRight, Lock, Rocket, Brain, Clock, GitCommit, PieChart, Calendar, LineChart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Features() {
     const [activeFeature, setActiveFeature] = useState(0);
     const [hoveredCard, setHoveredCard] = useState(null);
     const [isVisible, setIsVisible] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         setIsVisible(true);
@@ -223,7 +225,7 @@ export default function Features() {
                 <div className="max-w-5xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-5xl md:text-6xl font-black mb-6">
-                            Why Choose <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">GitRank</span>
+                            Why Choose <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">GitRanker</span>
                         </h2>
                         <p className="text-lg text-gray-400 font-light">
                             See how we compare to other platforms
@@ -238,7 +240,7 @@ export default function Features() {
                                         <th className="text-left py-6 px-4 text-gray-400 font-semibold">Feature</th>
                                         <th className="text-center py-6 px-4">
                                             <span className="inline-block px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 font-bold">
-                                                GitRank
+                                                GitRanker
                                             </span>
                                         </th>
                                         <th className="text-center py-6 px-4 text-gray-400 font-semibold">Others</th>
@@ -335,7 +337,7 @@ export default function Features() {
                             <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto font-light">
                                 Start tracking your progress and competing with developers worldwide
                             </p>
-                            <button className="group px-12 py-6 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-bold text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl shadow-purple-500/50 flex items-center gap-3 mx-auto">
+                            <button className="group px-12 py-6 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-bold text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl shadow-purple-500/50 flex items-center gap-3 mx-auto" onClick={()=>navigate("/")}>
                                 Get Started Free
                                 <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
                             </button>

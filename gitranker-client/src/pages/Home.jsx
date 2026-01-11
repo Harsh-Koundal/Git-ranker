@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Github, TrendingUp, Award, Users, Code, Star, GitBranch, Activity, Zap, Globe, BarChart3, ChevronRight, Sparkles, Trophy, Target } from 'lucide-react';
+import {useNavigate} from "react-router-dom";
 
 export default function Home() {
     const [username, setUsername] = useState('');
     const [isVisible, setIsVisible] = useState(false);
     const [hoveredCard, setHoveredCard] = useState(null);
     const [scrollY, setScrollY] = useState(0);
+    const navigate = useNavigate();
 
     useEffect(() => {
         setIsVisible(true);
@@ -406,7 +408,8 @@ export default function Home() {
                             <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto font-light">
                                 Join thousands of developers discovering their GitHub potential and competing globally
                             </p>
-                            <button className="group px-12 py-6 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 font-bold text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl shadow-cyan-500/50 flex items-center gap-3 mx-auto">
+                            <button className="group px-12 py-6 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 font-bold text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl shadow-cyan-500/50 flex items-center gap-3 mx-auto"
+                            onClick={()=>navigate("/")}>
                                 Start Free Analysis
                                 <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
                             </button>

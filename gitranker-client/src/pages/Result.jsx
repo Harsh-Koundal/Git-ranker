@@ -155,10 +155,10 @@ export default function Result() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0b0d12] text-white mt-10">
+    <div className="min-h-screen bg-[#0b0d12] text-white mt-16 relative isolate">
 
       {/* Profile Header */}
-      <section className="px-6 py-12 border-b border-white/10">
+      <section className="px-6 py-12 border-b border-white/10 z-50 relative">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Avatar & Basic Info */}

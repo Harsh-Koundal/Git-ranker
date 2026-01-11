@@ -6,7 +6,7 @@ const Footer = () => {
   const navigate = useNavigate();
 
   return (
-    <footer className="relative z-10 px-6 py-14 border-t border-white/10 bg-[#0b0d12]">
+    <footer className="relative z-50 px-6 py-14 border-t border-white/10 bg-[#0b0d12] overflow-hidden isolate">
       <div className="max-w-7xl mx-auto">
 
         {/* Top Row */}
