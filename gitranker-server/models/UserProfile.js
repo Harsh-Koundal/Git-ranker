@@ -27,4 +27,4 @@ const UserProfileSchema = new mongoose.Schema({
   profileCompleteness: ProfileCompletenessSchema,
 }, { timestamps: true });
 
-export default mongoose.model("User", UserProfileSchema);
+export default mongoose.model("UserProfile", UserProfileSchema);
