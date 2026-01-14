@@ -22,7 +22,7 @@ function App() {
         <Route path='/features' element={<Features />} />
         <Route path='/leaderboard' element={<Leaderboard />} />
         <Route path='/about' element={<About />} />
-        <Route path='/result/:username' element={<Result />} />
+        <Route path='/results/:username' element={<Result />} />
       </Routes>
       <Footer/>
     </>
