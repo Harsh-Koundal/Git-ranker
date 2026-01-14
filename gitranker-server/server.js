@@ -6,6 +6,8 @@ import mongoose, { mongo } from "mongoose";
 import analyzeRoutes from "./routes/analyzeRoute.js";
 import resultRoutes from "./routes/resultRoute.js";
 import leaderboardRoutes from "./routes/leaderboardRoute.js"
+import { leaderboardCron } from "./cron/leaderboardCron.js";
+import { cleanupCron } from "./cron/cleanupCron.js";
 
 dotenv.config();
 
@@ -38,6 +40,9 @@ app.use(express.json());
 app.use("/api/v1/analyze",analyzeRoutes);
 app.use("/api/v1/result",resultRoutes);
 app.use("/api/v1/leaderboard",leaderboardRoutes);
+
+leaderboardCron();
+cleanupCron();
 
 mongoose
 .connect(process.env.DB_URI)
