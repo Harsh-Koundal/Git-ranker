@@ -1,10 +1,11 @@
 const clamp = (value, min = 0, max = 100) => {
-    Math.min(Math.max(value, min), max);
+  return Math.min(Math.max(value, min), max);
+};
 
-}
 const normalize = (value, maxExpected) => {
-    clamp((value / maxExpected) * 100);
-}
+  if (!maxExpected || isNaN(value)) return 0;
+  return clamp((value / maxExpected) * 100);
+};
 
 // Consistency Score
 export const calculateConsistencyScore = ({commits,streak})=>{
