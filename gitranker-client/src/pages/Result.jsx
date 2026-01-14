@@ -1,150 +1,275 @@
-import React, { useState } from 'react';
-import { Github, TrendingUp, Award, Users, Code, Star, GitBranch, Activity, Zap, Globe, BarChart3, ChevronRight, Sparkles, Trophy, Target, Calendar, GitPullRequest, AlertCircle, CheckCircle, Clock, Flame, Brain, TrendingDown, ExternalLink, Share2, Download, ArrowUpRight, ArrowDownRight, Eye, Heart, MessageSquare, GitCommit } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Github, TrendingUp, Award, Users, Code, Star, GitBranch, Activity, Zap, Globe, BarChart3, ChevronRight, Sparkles, Trophy, Target, Calendar, GitPullRequest, AlertCircle, CheckCircle, Clock, Flame, Brain, TrendingDown, ExternalLink, Share2, Download, ArrowUpRight, ArrowDownRight, Eye, Heart, MessageSquare, GitCommit, Loader2 } from 'lucide-react';
+import axios from 'axios';
 
 export default function Result() {
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedTimeRange, setSelectedTimeRange] = useState('365');
+  const [profileData, setProfileData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock data - replace with real API data
-  const profileData = {
-    username: "johndoe",
-    fullName: "John Doe",
-    bio: "Full-stack developer passionate about open source and building scalable applications",
-    location: "San Francisco, CA",
-    company: "TechCorp Inc.",
-    website: "johndoe.dev",
-    twitter: "@johndoe",
-    accountAge: "5 years",
-    createdDate: "Jan 2020",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-    
-    overallScore: 92,
-    globalRank: "#1,247",
-    percentile: "Top 5%",
-    level: "Elite",
-    
-    categoryScores: {
-      consistency: { score: 95, weight: 30, color: "from-purple-500 to-pink-500" },
-      volume: { score: 88, weight: 25, color: "from-blue-500 to-cyan-500" },
-      quality: { score: 91, weight: 20, color: "from-green-500 to-emerald-500" },
-      impact: { score: 87, weight: 15, color: "from-orange-500 to-red-500" },
-      profile: { score: 98, weight: 10, color: "from-yellow-500 to-orange-500" }
-    },
-    
-    completeness: {
-      bio: true,
-      avatar: true,
-      pinned: true,
-      readme: true,
-      links: true,
-      score: 100
-    },
-    
-    repositories: {
-      total: 47,
-      original: 38,
-      forked: 9,
-      archived: 3,
-      active: 35
-    },
-    
-    stars: {
-      total: 2847,
-      avgPerRepo: 60,
-      topRepo: { name: "awesome-react-components", stars: 1203 },
-      growth: "+18%"
-    },
-    
-    followers: {
-      total: 1284,
-      growth: "+12%",
-      ratio: 2.3
-    },
-    
-    commits: {
-      total: 8473,
-      last7days: 34,
-      last30days: 156,
-      last90days: 487,
-      last365days: 1923,
-      perDay: 5.3,
-      firstCommit: "Jan 2020",
-      lastCommit: "2 hours ago"
-    },
-    
-    streak: {
-      current: 87,
-      longest: 234,
-      average: 45,
-      breaks: 12
-    },
-    
-    activity: {
-      activeDays: 76,
-      inactiveDays: 24,
-      consistency: "Excellent",
-      trend: "improving"
-    },
-    
-    languages: [
-      { name: "JavaScript", percent: 38, commits: 3220, color: "from-yellow-400 to-orange-400" },
-      { name: "TypeScript", percent: 28, commits: 2372, color: "from-blue-400 to-blue-600" },
-      { name: "Python", percent: 18, commits: 1525, color: "from-green-400 to-green-600" },
-      { name: "Go", percent: 10, commits: 847, color: "from-cyan-400 to-cyan-600" },
-      { name: "Other", percent: 6, commits: 509, color: "from-gray-400 to-gray-600" }
-    ],
-    
-    pullRequests: {
-      created: 284,
-      merged: 256,
-      acceptanceRate: 90,
-      externalRepos: 42
-    },
-    
-    issues: {
-      opened: 167,
-      closed: 143,
-      participationRate: 85
-    },
-    
-    weekdayActivity: [
-      { day: "Mon", commits: 1247 },
-      { day: "Tue", commits: 1389 },
-      { day: "Wed", commits: 1456 },
-      { day: "Thu", commits: 1298 },
-      { day: "Fri", commits: 1124 },
-      { day: "Sat", commits: 892 },
-      { day: "Sun", commits: 1067 }
-    ],
-    
-    contributionHeatmap: Array(12).fill(0).map((_, month) => ({
-      month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][month],
-      commits: Math.floor(Math.random() * 200) + 50
-    })),
-    
-    strengths: [
-      "Exceptional consistency with 87-day active streak",
-      "High TypeScript/JavaScript expertise with 66% contribution",
-      "Strong open-source engagement with 90% PR acceptance rate",
-      "Well-maintained profile with complete documentation"
-    ],
-    
-    weaknesses: [
-      "Could increase repository diversity",
-      "Weekend activity slightly lower than weekdays",
-      "Few contributions to external trending projects"
-    ],
-    
-    suggestions: [
-      "Maintain your excellent consistency streak",
-      "Consider contributing to more high-impact open source projects",
-      "Explore adding more languages to broaden skill set",
-      "Document your projects with better README files"
-    ]
+  // Get username from URL
+  const username = window.location.pathname.split('/').pop() || 'torvalds';
+
+  useEffect(() => {
+    fetchProfileData();
+  }, [username]);
+
+  const fetchProfileData = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await axios.get(`http://localhost:5025/api/v1/result/${username}`);
+      
+      const data = await response.data;
+      console.log('API Response:', data);
+      
+      // Add color mapping for category scores
+      const colorMap = {
+        consistency: 'from-blue-400 to-blue-600',
+        volume: 'from-green-400 to-green-600',
+        quality: 'from-purple-400 to-purple-600',
+        impact: 'from-pink-400 to-pink-600',
+        profile: 'from-yellow-400 to-yellow-600'
+      };
+
+      // Add colors to categoryScores
+      const categoryScoresWithColors = {};
+      Object.keys(data.report.categoryScores || {}).forEach(key => {
+        categoryScoresWithColors[key] = {
+          ...data.report.categoryScores[key],
+          color: colorMap[key] || 'from-gray-400 to-gray-600'
+        };
+      });
+      
+      // Transform API data to match component structure
+      const transformedData = {
+        username: data.profile.username || username,
+        fullName: data.profile.fullName || username,
+        bio: data.profile.bio || "GitHub Developer",
+        location: data.profile.location || "",
+        company: data.profile.company || "",
+        website: data.profile.website || "",
+        twitter: data.profile.twitter || "",
+        accountAge: `${data.profile.accountAgeYears || 0} years`,
+        createdDate: data.profile.accountCreatedAt ? new Date(data.profile.accountCreatedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A',
+        avatar: data.profile.avatar || `https://github.com/${username}.png`,
+        
+        overallScore: data.report.overallScore || 0,
+        globalRank: data.report.globalRank || "N/A",
+        percentile: data.report.percentile || "N/A",
+        level: data.report.level || "Developer",
+        
+        categoryScores: categoryScoresWithColors,
+        
+        completeness: {
+          bio: data.profile.profileCompleteness?.bio || false,
+          avatar: data.profile.profileCompleteness?.avatar || false,
+          pinned: data.profile.profileCompleteness?.pinnedRepos || false,
+          readme: data.profile.profileCompleteness?.profileReadme || false,
+          links: data.profile.profileCompleteness?.externalLinks || false,
+          score: data.profile.profileCompleteness?.score || 0
+        },
+        
+        repositories: {
+          total: data.report.repositories?.total || 0,
+          original: data.report.repositories?.original || 0,
+          forked: data.report.repositories?.forked || 0,
+          archived: data.report.repositories?.archived || 0,
+          active: data.report.repositories?.active || 0
+        },
+        
+        stars: {
+          total: data.report.stars?.total || 0,
+          avgPerRepo: data.report.stars?.avgPerRepo || 0,
+          topRepo: data.report.stars?.topRepo || { name: "N/A", stars: 0 },
+          growth: data.report.stars?.growthPercentage || "+0%"
+        },
+        
+        followers: {
+          total: data.report.followers?.total || 0,
+          growth: data.report.followers?.growthPercentage || "+0%",
+          ratio: data.report.followers?.followerFollowingRatio || 0
+        },
+        
+        commits: {
+          total: data.report.commits?.total || 0,
+          last7days: data.report.commits?.last7days || 0,
+          last30days: data.report.commits?.last30days || 0,
+          last90days: data.report.commits?.last90days || 0,
+          last365days: data.report.commits?.last365days || 0,
+          perDay: data.report.commits?.perDayAverage || 0,
+          firstCommit: data.report.commits?.firstCommitDate || "N/A",
+          lastCommit: data.report.commits?.lastCommitDate || "N/A"
+        },
+        
+        streak: {
+          current: data.report.streak?.current || 0,
+          longest: data.report.streak?.longest || 0,
+          average: data.report.streak?.average || 0,
+          breaks: data.report.streak?.breaks || 0
+        },
+        
+        activity: {
+          activeDays: data.report.activity?.activeDaysPercentage || 0,
+          inactiveDays: data.report.activity?.inactiveDaysPercentage || 0,
+          consistency: data.report.activity?.consistencyLabel || "N/A",
+          trend: data.report.activity?.trend || "stable"
+        },
+        
+        languages: (data.report.languages || []).map(lang => ({
+          name: lang.name || 'Unknown',
+          percent: lang.percentage || 0,
+          commits: lang.commits || 0,
+          color: lang.color || "from-gray-400 to-gray-600"
+        })),
+        
+        pullRequests: {
+          created: data.report.pullRequests?.created || 0,
+          merged: data.report.pullRequests?.merged || 0,
+          acceptanceRate: data.report.pullRequests?.acceptanceRate || 0,
+          externalRepos: data.report.pullRequests?.externalRepos || 0
+        },
+        
+        issues: {
+          opened: data.report.issues?.opened || 0,
+          closed: data.report.issues?.closed || 0,
+          participationRate: data.report.issues?.participationRate || 0
+        },
+        
+        weekdayActivity: data.report.weekdayActivity || [],
+        
+        contributionHeatmap: data.report.monthlyHeatmap || [],
+        
+        strengths: generateStrengths(data),
+        weaknesses: generateWeaknesses(data),
+        suggestions: generateSuggestions(data)
+      };
+
+      setProfileData(transformedData);
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      setError(err.message || 'Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const maxWeekdayCommits = Math.max(...profileData.weekdayActivity.map(d => d.commits));
-  const maxMonthlyCommits = Math.max(...profileData.contributionHeatmap.map(d => d.commits));
+  const generateStrengths = (data) => {
+    const strengths = [];
+    const report = data.report;
+    
+    if (report.streak?.current > 30) {
+      strengths.push(`Exceptional consistency with ${report.streak.current}-day active streak`);
+    }
+    
+    if (report.languages?.length > 0) {
+      const topLang = report.languages[0];
+      strengths.push(`Strong ${topLang.name} expertise with ${topLang.percentage}% contribution`);
+    }
+    
+    if (report.pullRequests?.acceptanceRate > 80) {
+      strengths.push(`Excellent open-source engagement with ${report.pullRequests.acceptanceRate}% PR acceptance rate`);
+    }
+    
+    if (data.profile.profileCompleteness?.score > 80) {
+      strengths.push("Well-maintained profile with complete documentation");
+    }
+    
+    if (report.commits?.perDayAverage > 5) {
+      strengths.push(`High productivity with ${report.commits.perDayAverage} commits per day`);
+    }
+    
+    return strengths.length > 0 ? strengths : ["Continue building your GitHub presence"];
+  };
+
+  const generateWeaknesses = (data) => {
+    const weaknesses = [];
+    const report = data.report;
+    
+    if (report.repositories?.total < 10) {
+      weaknesses.push("Could increase repository diversity");
+    }
+    
+    if (report.commits?.perDayAverage < 2) {
+      weaknesses.push("Consider increasing daily commit frequency");
+    }
+    
+    if (report.pullRequests?.externalRepos < 10) {
+      weaknesses.push("Limited contributions to external projects");
+    }
+    
+    if (data.profile.profileCompleteness?.score < 50) {
+      weaknesses.push("Profile could be more complete");
+    }
+    
+    return weaknesses.length > 0 ? weaknesses : ["Keep up the great work!"];
+  };
+
+  const generateSuggestions = (data) => {
+    const suggestions = [];
+    const report = data.report;
+    
+    if (report.streak?.current > 0 && report.streak.current < 30) {
+      suggestions.push("Maintain your consistency streak - you're building momentum!");
+    }
+    
+    suggestions.push("Consider contributing to more high-impact open source projects");
+    
+    if (report.languages?.length < 3) {
+      suggestions.push("Explore adding more languages to broaden your skill set");
+    }
+    
+    if (data.profile.profileCompleteness?.score < 80) {
+      suggestions.push("Complete your profile with README and pinned repositories");
+    }
+    
+    suggestions.push("Document your projects with comprehensive README files");
+    
+    return suggestions;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0b0d12] text-white flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-16 h-16 animate-spin text-purple-400 mx-auto mb-4" />
+          <p className="text-xl text-gray-400">Loading profile data...</p>
+          <p className="text-sm text-gray-500 mt-2">Analyzing @{username}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#0b0d12] text-white flex items-center justify-center px-6">
+        <div className="max-w-md w-full">
+          <div className="p-8 rounded-3xl bg-red-500/10 border border-red-500/30 text-center">
+            <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Error Loading Profile</h2>
+            <p className="text-gray-400 mb-6">{error}</p>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-semibold transition-all"
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profileData) return null;
+
+  const maxWeekdayCommits = profileData.weekdayActivity.length > 0 
+    ? Math.max(...profileData.weekdayActivity.map(d => d.commits || 0)) 
+    : 1;
+  const maxMonthlyCommits = profileData.contributionHeatmap.length > 0
+    ? Math.max(...profileData.contributionHeatmap.map(d => d.commits || 0))
+    : 1;
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <BarChart3 className="w-4 h-4" /> },
@@ -155,10 +280,9 @@ export default function Result() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0b0d12] text-white mt-16 relative isolate">
-
+    <div className="min-h-screen bg-[#0b0d12] text-white relative isolate">
       {/* Profile Header */}
-      <section className="px-6 py-12 border-b border-white/10 z-50 relative">
+      <section className="px-6 py-12 border-b border-white/10 z-50 relative mt-10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Avatar & Basic Info */}
@@ -199,13 +323,13 @@ export default function Result() {
                 {(profileData.website || profileData.twitter) && (
                   <div className="flex gap-2">
                     {profileData.website && (
-                      <a href={`https://${profileData.website}`} className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm flex items-center gap-2 transition-all">
+                      <a href={`https://${profileData.website}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm flex items-center gap-2 transition-all">
                         <ExternalLink className="w-3 h-3" />
                         Website
                       </a>
                     )}
                     {profileData.twitter && (
-                      <a href={`https://twitter.com/${profileData.twitter.replace('@', '')}`} className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm flex items-center gap-2 transition-all">
+                      <a href={`https://twitter.com/${profileData.twitter.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm flex items-center gap-2 transition-all">
                         <ExternalLink className="w-3 h-3" />
                         Twitter
                       </a>
@@ -221,7 +345,7 @@ export default function Result() {
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 mb-4">
                   <Sparkles className="w-4 h-4 text-purple-400" />
                   <span className="text-sm font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">
-                    {profileData.level} Developer
+                    {profileData.level}
                   </span>
                 </div>
                 
@@ -248,7 +372,7 @@ export default function Result() {
       </section>
 
       {/* Tabs */}
-      <div className="border-b border-white/10 sticky top-[73px] bg-[#0b0d12]/95 backdrop-blur-xl z-40">
+      <div className="border-b border-white/10 sticky top-0 bg-[#0b0d12]/95 backdrop-blur-xl z-40">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex gap-1 overflow-x-auto">
             {tabs.map(tab => (
@@ -286,7 +410,7 @@ export default function Result() {
                       <div className="text-sm text-gray-400 capitalize">{key}</div>
                       <div className="text-xs px-2 py-1 rounded-full bg-white/5">{data.weight}%</div>
                     </div>
-                    <div className="text-4xl font-black bg-gradient-to-r {data.color} bg-clip-text text-transparent mb-3">
+                    <div className={`text-4xl font-black bg-gradient-to-r ${data.color} bg-clip-text text-transparent mb-3`}>
                       {data.score}
                     </div>
                     <div className="h-2 rounded-full bg-white/10 overflow-hidden">
@@ -332,7 +456,7 @@ export default function Result() {
                     <ArrowUpRight className="w-3 h-3" />
                     {profileData.stars.growth}
                   </span>
-                  <span className="text-gray-500">this month</span>
+                  <span className="text-gray-500">growth</span>
                 </div>
               </div>
 
@@ -347,7 +471,7 @@ export default function Result() {
                   </div>
                 </div>
                 <div className="text-xs text-gray-500">
-                  {profileData.commits.perDay} per day average
+                  {profileData.commits.perDay.toFixed(1)} per day average
                 </div>
               </div>
 
@@ -366,7 +490,7 @@ export default function Result() {
                     <ArrowUpRight className="w-3 h-3" />
                     {profileData.followers.growth}
                   </span>
-                  <span className="text-gray-500">this quarter</span>
+                  <span className="text-gray-500">growth</span>
                 </div>
               </div>
             </div>
@@ -396,31 +520,33 @@ export default function Result() {
             </div>
 
             {/* Languages */}
-            <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <Code className="w-6 h-6 text-purple-400" />
-                Language Proficiency
-              </h3>
-              <div className="space-y-6">
-                {profileData.languages.map((lang, i) => (
-                  <div key={i}>
-                    <div className="flex justify-between items-center mb-3">
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-lg">{lang.name}</span>
-                        <span className="text-sm text-gray-400">{lang.commits.toLocaleString()} commits</span>
+            {profileData.languages.length > 0 && (
+              <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
+                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <Code className="w-6 h-6 text-purple-400" />
+                  Language Proficiency
+                </h3>
+                <div className="space-y-6">
+                  {profileData.languages.slice(0, 5).map((lang, i) => (
+                    <div key={i}>
+                      <div className="flex justify-between items-center mb-3">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-lg">{lang.name}</span>
+                          <span className="text-sm text-gray-400">{lang.commits.toLocaleString()} commits</span>
+                        </div>
+                        <span className="text-2xl font-bold">{lang.percent.toFixed(1)}%</span>
                       </div>
-                      <span className="text-2xl font-bold">{lang.percent}%</span>
+                      <div className="h-4 rounded-full bg-white/10 overflow-hidden">
+                        <div
+                          className={`h-full bg-gradient-to-r ${lang.color} transition-all duration-1000`}
+                          style={{ width: `${lang.percent}%` }}
+                        ></div>
+                      </div>
                     </div>
-                    <div className="h-4 rounded-full bg-white/10 overflow-hidden">
-                      <div
-                        className={`h-full bg-gradient-to-r ${lang.color} transition-all duration-1000`}
-                        style={{ width: `${lang.percent}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -475,190 +601,139 @@ export default function Result() {
                 ))}
               </div>
 
-              <div className="flex justify-between text-sm text-gray-400 mb-4">
+              <div className="flex justify-between text-sm text-gray-400">
                 <span>First commit: {profileData.commits.firstCommit}</span>
                 <span>Last commit: {profileData.commits.lastCommit}</span>
               </div>
             </div>
 
             {/* Weekday Activity */}
-            <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <Calendar className="w-6 h-6 text-blue-400" />
-                Weekly Pattern
-              </h3>
-              
-              <div className="h-64 flex items-end gap-4">
-                {profileData.weekdayActivity.map((item, i) => {
-                  const height = (item.commits / maxWeekdayCommits) * 100;
-                  return (
-                    <div key={i} className="flex-1 group relative flex flex-col items-center">
-                      <div className="absolute -top-12 scale-0 group-hover:scale-100 transition-transform bg-black/90 text-sm px-4 py-2 rounded-xl border border-white/10">
-                        {item.commits} commits
+            {profileData.weekdayActivity.length > 0 && (
+              <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
+                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <Calendar className="w-6 h-6 text-blue-400" />
+                  Weekly Pattern
+                </h3>
+                
+                <div className="h-64 flex items-end gap-4">
+                  {profileData.weekdayActivity.map((item, i) => {
+                    const height = maxWeekdayCommits > 0 ? (item.commits / maxWeekdayCommits) * 100 : 0;
+                    return (
+                      <div key={i} className="flex-1 group relative flex flex-col items-center">
+                        <div className="absolute -top-12 scale-0 group-hover:scale-100 transition-transform bg-black/90 text-sm px-4 py-2 rounded-xl border border-white/10 whitespace-nowrap z-10">
+                          {item.commits} commits
+                        </div>
+                        
+                        <div
+                          className="w-full rounded-t-2xl bg-gradient-to-t from-blue-500 to-cyan-500 transition-all duration-700 group-hover:from-blue-400 group-hover:to-cyan-400"
+                          style={{ height: `${Math.max(height, 2)}%`, minHeight: '4px' }}
+                        />
+                        
+                        <span className="mt-3 text-sm text-gray-400">{item.day}</span>
                       </div>
-                      
-                      <div
-                        className="w-full rounded-t-2xl bg-gradient-to-t from-blue-500 to-cyan-500 transition-all duration-700 group-hover:from-blue-400 group-hover:to-cyan-400"
-                        style={{ height: `${height}%` }}
-                      />
-                      
-                      <span className="mt-3 text-sm text-gray-400">{item.day}</span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Monthly Heatmap */}
-            <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <BarChart3 className="w-6 h-6 text-purple-400" />
-                Yearly Overview
-              </h3>
-              
-              <div className="grid grid-cols-12 gap-2">
-                {profileData.contributionHeatmap.map((item, i) => {
-                  const intensity = (item.commits / maxMonthlyCommits) * 100;
-                  return (
-                    <div key={i} className="group relative">
-                      <div className="absolute -top-16 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-transform bg-black/90 text-sm px-4 py-2 rounded-xl border border-white/10 whitespace-nowrap z-10">
-                        {item.month}: {item.commits} commits
+            {profileData.contributionHeatmap.length > 0 && (
+              <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
+                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <BarChart3 className="w-6 h-6 text-purple-400" />
+                  Yearly Overview
+                </h3>
+                
+                <div className="grid grid-cols-12 gap-2">
+                  {profileData.contributionHeatmap.map((item, i) => {
+                    const intensity = maxMonthlyCommits > 0 ? (item.commits / maxMonthlyCommits) * 100 : 0;
+                    return (
+                      <div key={i} className="group relative">
+                        <div className="absolute -top-16 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-transform bg-black/90 text-sm px-4 py-2 rounded-xl border border-white/10 whitespace-nowrap z-10">
+                          {item.month}: {item.commits} commits
+                        </div>
+                        
+                        <div className="aspect-square rounded-lg bg-purple-500 transition-all hover:scale-110" 
+                             style={{ opacity: Math.max(intensity / 100, 0.1) }}
+                        />
+                        <div className="text-xs text-center mt-2 text-gray-500">{item.month}</div>
                       </div>
-                      
-                      <div className="aspect-square rounded-lg bg-purple-500 transition-all hover:scale-110" 
-                           style={{ opacity: intensity / 100 }}
-                      />
-                      <div className="text-xs text-center mt-2 text-gray-500">{item.month}</div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
         {activeTab === 'quality' && (
           <div className="space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Repository Quality */}
-              <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
-                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <Target className="w-6 h-6 text-green-400" />
-                  Repository Quality
-                </h3>
-                
-                <div className="space-y-4">
-                  {[
-                    { label: 'README Documentation', status: 'excellent', percent: 95 },
-                    { label: 'License Present', status: 'good', percent: 87 },
-                    { label: 'Topics & Tags', status: 'excellent', percent: 92 },
-                    { label: 'CI/CD Configured', status: 'average', percent: 68 },
-                    { label: 'Tests Present', status: 'good', percent: 81 }
-                  ].map((item, i) => (
-                    <div key={i}>
-                      <div className="flex justify-between mb-2">
-                        <span className="text-sm font-medium">{item.label}</span>
-                        <span className={`text-sm font-semibold ${
-                          item.status === 'excellent' ? 'text-green-400' :
-                          item.status === 'good' ? 'text-blue-400' : 'text-yellow-400'
-                        }`}>
-                          {item.percent}%
-                        </span>
-                      </div>
-                      <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                        <div
-                          className={`h-full transition-all duration-1000 ${
-                            item.status === 'excellent' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
-                            item.status === 'good' ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
-                            'bg-gradient-to-r from-yellow-500 to-orange-500'
-                          }`}
-                          style={{ width: `${item.percent}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Maintenance Score */}
-              <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
-                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <Clock className="w-6 h-6 text-blue-400" />
-                  Maintenance Activity
-                </h3>
-                
-                <div className="space-y-6">
-                  <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Recently Updated</span>
-                      <CheckCircle className="w-5 h-5 text-green-400" />
-                    </div>
-                    <div className="text-3xl font-bold">28 repos</div>
-                    <div className="text-xs text-gray-400 mt-1">Updated in last 30 days</div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Needs Attention</span>
-                      <AlertCircle className="w-5 h-5 text-orange-400" />
-                    </div>
-                    <div className="text-3xl font-bold">5 repos</div>
-                    <div className="text-xs text-gray-400 mt-1">Not updated in 6+ months</div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-gray-500/10 border border-gray-500/20">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">Archived</span>
-                      <Activity className="w-5 h-5 text-gray-400" />
-                    </div>
-                    <div className="text-3xl font-bold">{profileData.repositories.archived} repos</div>
-                    <div className="text-xs text-gray-400 mt-1">Officially archived</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Top Repositories */}
             <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
               <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <Star className="w-6 h-6 text-yellow-400" />
-                Top Repositories by Stars
+                <Target className="w-6 h-6 text-green-400" />
+                Repository Quality
               </h3>
               
-              <div className="space-y-4">
-                {[
-                  { name: 'awesome-react-components', stars: 1203, forks: 234, language: 'TypeScript', updated: '2 days ago' },
-                  { name: 'ml-pipeline-toolkit', stars: 876, forks: 145, language: 'Python', updated: '1 week ago' },
-                  { name: 'api-gateway-framework', stars: 543, forks: 89, language: 'Go', updated: '3 days ago' }
-                ].map((repo, i) => (
-                  <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all group">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h4 className="text-xl font-bold mb-1 group-hover:text-purple-400 transition-colors">{repo.name}</h4>
-                        <div className="flex items-center gap-3 text-sm text-gray-400">
-                          <span className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded-full bg-blue-400"></div>
-                            {repo.language}
-                          </span>
-                          <span>Updated {repo.updated}</span>
-                        </div>
-                      </div>
-                      <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition-colors" />
-                    </div>
-                    <div className="flex gap-4">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Star className="w-4 h-4 text-yellow-400" />
-                        <span className="font-semibold">{repo.stars}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <GitBranch className="w-4 h-4 text-blue-400" />
-                        <span className="font-semibold">{repo.forks}</span>
-                      </div>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 rounded-2xl bg-green-500/10 border border-green-500/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-medium">Original Repositories</span>
+                    <CheckCircle className="w-5 h-5 text-green-400" />
                   </div>
-                ))}
+                  <div className="text-4xl font-bold mb-2">{profileData.repositories.original}</div>
+                  <div className="text-sm text-gray-400">Created from scratch</div>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-blue-500/10 border border-blue-500/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-medium">Active Repositories</span>
+                    <Activity className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div className="text-4xl font-bold mb-2">{profileData.repositories.active}</div>
+                  <div className="text-sm text-gray-400">Recently maintained</div>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-yellow-500/10 border border-yellow-500/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-medium">Forked Repositories</span>
+                    <GitBranch className="w-5 h-5 text-yellow-400" />
+                  </div>
+                  <div className="text-4xl font-bold mb-2">{profileData.repositories.forked}</div>
+                  <div className="text-sm text-gray-400">Contributed to others</div>
+                </div>
+
+                <div className="p-6 rounded-2xl bg-gray-500/10 border border-gray-500/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-medium">Archived</span>
+                    <Clock className="w-5 h-5 text-gray-400" />
+                  </div>
+                  <div className="text-4xl font-bold mb-2">{profileData.repositories.archived}</div>
+                  <div className="text-sm text-gray-400">Completed projects</div>
+                </div>
               </div>
             </div>
+
+            {/* Top Repository */}
+            {profileData.stars.topRepo.name !== "N/A" && (
+              <div className="p-8 rounded-3xl bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
+                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <Star className="w-6 h-6 text-yellow-400" />
+                  Top Repository
+                </h3>
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-3xl font-bold mb-2">{profileData.stars.topRepo.name}</h4>
+                    <p className="text-gray-400">Most starred repository</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-5xl font-black text-yellow-400 mb-2">{profileData.stars.topRepo.stars}</div>
+                    <div className="text-sm text-gray-400">stars</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -670,7 +745,7 @@ export default function Result() {
                 <GitPullRequest className="w-8 h-8 text-purple-400 mb-3" />
                 <div className="text-4xl font-bold mb-1">{profileData.pullRequests.created}</div>
                 <div className="text-sm text-gray-400 mb-3">Pull Requests</div>
-                <div className="text-xs text-green-400">{profileData.pullRequests.acceptanceRate}% acceptance rate</div>
+                <div className="text-xs text-green-400">{profileData.pullRequests.acceptanceRate}% acceptance</div>
               </div>
 
               <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
@@ -684,7 +759,7 @@ export default function Result() {
                 <Globe className="w-8 h-8 text-green-400 mb-3" />
                 <div className="text-4xl font-bold mb-1">{profileData.pullRequests.externalRepos}</div>
                 <div className="text-sm text-gray-400 mb-3">External Repos</div>
-                <div className="text-xs text-blue-400">Active contributor</div>
+                <div className="text-xs text-blue-400">Contributed</div>
               </div>
             </div>
 
@@ -697,70 +772,39 @@ export default function Result() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <div className="text-sm text-gray-400 mb-4">Pull Request Distribution</div>
+                  <div className="text-sm text-gray-400 mb-4">Pull Requests</div>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10">
                       <span className="text-sm">Merged</span>
                       <span className="font-bold text-green-400">{profileData.pullRequests.merged}</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-blue-500/10">
-                      <span className="text-sm">Open</span>
-                      <span className="font-bold text-blue-400">12</span>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-purple-500/10">
+                      <span className="text-sm">Created</span>
+                      <span className="font-bold text-purple-400">{profileData.pullRequests.created}</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-red-500/10">
-                      <span className="text-sm">Closed</span>
-                      <span className="font-bold text-red-400">16</span>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-blue-500/10">
+                      <span className="text-sm">Acceptance Rate</span>
+                      <span className="font-bold text-blue-400">{profileData.pullRequests.acceptanceRate}%</span>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-sm text-gray-400 mb-4">Issue Distribution</div>
+                  <div className="text-sm text-gray-400 mb-4">Issues</div>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between p-3 rounded-xl bg-green-500/10">
-                      <span className="text-sm">Resolved</span>
+                      <span className="text-sm">Closed</span>
                       <span className="font-bold text-green-400">{profileData.issues.closed}</span>
                     </div>
                     <div className="flex items-center justify-between p-3 rounded-xl bg-blue-500/10">
-                      <span className="text-sm">Active</span>
-                      <span className="font-bold text-blue-400">18</span>
+                      <span className="text-sm">Opened</span>
+                      <span className="font-bold text-blue-400">{profileData.issues.opened}</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-gray-500/10">
-                      <span className="text-sm">Stale</span>
-                      <span className="font-bold text-gray-400">6</span>
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-purple-500/10">
+                      <span className="text-sm">Participation</span>
+                      <span className="font-bold text-purple-400">{profileData.issues.participationRate}%</span>
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Community Impact */}
-            <div className="p-8 rounded-3xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <Heart className="w-6 h-6 text-pink-400" />
-                Community Engagement
-              </h3>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 rounded-xl bg-white/5">
-                  <Eye className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold">12.4K</div>
-                  <div className="text-xs text-gray-400">Total Views</div>
-                </div>
-                <div className="text-center p-4 rounded-xl bg-white/5">
-                  <Star className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold">{profileData.stars.total}</div>
-                  <div className="text-xs text-gray-400">Stars Earned</div>
-                </div>
-                <div className="text-center p-4 rounded-xl bg-white/5">
-                  <GitBranch className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold">542</div>
-                  <div className="text-xs text-gray-400">Total Forks</div>
-                </div>
-                <div className="text-center p-4 rounded-xl bg-white/5">
-                  <Users className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                  <div className="text-2xl font-bold">{profileData.followers.total}</div>
-                  <div className="text-xs text-gray-400">Followers</div>
                 </div>
               </div>
             </div>
@@ -777,7 +821,7 @@ export default function Result() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold">AI-Powered Insights</h3>
-                  <p className="text-sm text-gray-400">Generated analysis based on your activity</p>
+                  <p className="text-sm text-gray-400">Analysis based on your activity</p>
                 </div>
               </div>
 
@@ -829,93 +873,16 @@ export default function Result() {
                 </div>
               </div>
             </div>
-
-            {/* Growth Trajectory */}
-            <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-green-400" />
-                Growth Trajectory
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 text-center">
-                  <ArrowUpRight className="w-8 h-8 text-green-400 mx-auto mb-3" />
-                  <div className="text-4xl font-bold text-green-400 mb-2">+28%</div>
-                  <div className="text-sm text-gray-400">Commit Growth</div>
-                  <div className="text-xs text-gray-500 mt-2">vs last quarter</div>
-                </div>
-
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 text-center">
-                  <ArrowUpRight className="w-8 h-8 text-blue-400 mx-auto mb-3" />
-                  <div className="text-4xl font-bold text-blue-400 mb-2">+18%</div>
-                  <div className="text-sm text-gray-400">Star Growth</div>
-                  <div className="text-xs text-gray-500 mt-2">vs last quarter</div>
-                </div>
-
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20 text-center">
-                  <ArrowUpRight className="w-8 h-8 text-purple-400 mx-auto mb-3" />
-                  <div className="text-4xl font-bold text-purple-400 mb-2">+12%</div>
-                  <div className="text-sm text-gray-400">Follower Growth</div>
-                  <div className="text-xs text-gray-500 mt-2">vs last quarter</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Next Milestone */}
-            <div className="p-8 rounded-3xl bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
-              <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <Target className="w-6 h-6 text-yellow-400" />
-                Next Milestone
-              </h3>
-              
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-semibold">Reach 100-day streak</span>
-                    <span className="text-yellow-400 font-bold">87 / 100 days</span>
-                  </div>
-                  <div className="h-3 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-yellow-400 to-orange-400 transition-all duration-1000"
-                         style={{ width: '87%' }}></div>
-                  </div>
-                  <p className="text-sm text-gray-400 mt-2">13 more days to reach this milestone! 🎯</p>
-                </div>
-
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-semibold">Earn 3,000 stars</span>
-                    <span className="text-yellow-400 font-bold">2,847 / 3,000 stars</span>
-                  </div>
-                  <div className="h-3 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-yellow-400 to-orange-400 transition-all duration-1000"
-                         style={{ width: '94.9%' }}></div>
-                  </div>
-                  <p className="text-sm text-gray-400 mt-2">153 more stars needed! ⭐</p>
-                </div>
-
-                <div>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-semibold">Reach 10,000 commits</span>
-                    <span className="text-yellow-400 font-bold">8,473 / 10,000 commits</span>
-                  </div>
-                  <div className="h-3 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-yellow-400 to-orange-400 transition-all duration-1000"
-                         style={{ width: '84.7%' }}></div>
-                  </div>
-                  <p className="text-sm text-gray-400 mt-2">1,527 more commits to go! 💪</p>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </div>
 
-      {/* Footer CTA */}
+      {/* Footer */}
       <div className="border-t border-white/10 bg-black/40 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="text-center">
             <h3 className="text-3xl font-bold mb-4">Share Your Achievement</h3>
-            <p className="text-gray-400 mb-6">Let others see your GitHub performance and ranking</p>
+            <p className="text-gray-400 mb-6">Show the world your GitHub performance</p>
             <div className="flex flex-wrap gap-4 justify-center">
               <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 font-semibold transition-all flex items-center gap-2">
                 <Share2 className="w-5 h-5" />
@@ -925,10 +892,10 @@ export default function Result() {
                 <Download className="w-5 h-5" />
                 Download Report
               </button>
-              <button className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-semibold transition-all flex items-center gap-2">
+              <a href={`https://github.com/${profileData.username}`} target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-semibold transition-all flex items-center gap-2">
                 <ExternalLink className="w-5 h-5" />
                 View on GitHub
-              </button>
+              </a>
             </div>
           </div>
         </div>
