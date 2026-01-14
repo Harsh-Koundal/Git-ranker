@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 import cors from "cors";
 import mongoose, { mongo } from "mongoose";
 
+import analyzeRoutes from "./routes/analyzeRoute.js";
+
 
 dotenv.config();
 
@@ -29,6 +31,10 @@ app.use(
     })
 );
 
+app.use(express.json());
+
+// routes
+app.use("/api/v1/analyze",analyzeRoutes)
 
 mongoose
 .connect(process.env.DB_URI)
