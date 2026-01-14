@@ -5,7 +5,7 @@ import mongoose, { mongo } from "mongoose";
 
 import analyzeRoutes from "./routes/analyzeRoute.js";
 import resultRoutes from "./routes/resultRoute.js";
-
+import leaderboardRoutes from "./routes/leaderboardRoute.js"
 
 dotenv.config();
 
@@ -37,6 +37,7 @@ app.use(express.json());
 // routes
 app.use("/api/v1/analyze",analyzeRoutes);
 app.use("/api/v1/result",resultRoutes);
+app.use("/api/v1/leaderboard",leaderboardRoutes);
 
 mongoose
 .connect(process.env.DB_URI)
