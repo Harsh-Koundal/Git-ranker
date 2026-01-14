@@ -1,4 +1,7 @@
 import axios from "axios";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const githubREST = axios.create({
     baseURL: process.env.GITHUB_REST_URL,
@@ -32,6 +35,7 @@ const fetchAllPages = async (URL,params={})=>{
         hasNext = data.length === 100;
         page += 1;
     }
+    return results;
 };
 
 // User profile
@@ -59,15 +63,24 @@ export const fetchRepoCommits = async (owner, repo, author) => {
 // Pull Requests 
 export const fetchPullRequests = async(username,repo)=>{
     return await fetchAllPages(
-        `/repo/${username}/${repo}/pulls`,
+        `/repos/${username}/${repo}/pulls`,
         {state:"all"}
     );
 };
 
+// User repositories 
+export const fetchAllRepositories = async (username) => {
+  return await fetchAllPages(`/users/${username}/repos`, {
+    sort: "updated",
+    direction: "desc",
+  });
+};
+
+
 // Issues
 export const fetchIssues = async (username,repo)=>{
     return await fetchAllPages(
-        `/repo/${username}/${repo}/issues`,
+        `/repos/${username}/${repo}/issues`,
         {state:"all"}
     );
 };
