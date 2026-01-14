@@ -6,7 +6,7 @@ import {
     fetchCommitStats,
     fetchFollowers,
     fetchStarredRepos,
-} from "../services/github.service.js";
+} from "../services/githubService.js";
 
 import {
     normalizeUserProfile,
@@ -19,10 +19,10 @@ import {
     normalizeStreaks,
     normalizeWeekdayActivity,
     normalizeMonthlyHeatmap,
-} from "../services/normalize.service.js";
+} from "../services/normalizeService.js";
 
 
-import { generateScoreReport } from "../services/score.service.js";
+import { generateScoreReport } from "../services/scoreService.js";
 
 import UserProfile from "../models/UserProfile.js";
 import AnalysisReport from "../models/AnalysisReport.js";
@@ -100,10 +100,10 @@ export const analyzeGithubProfile = async (req, res, next) => {
             { githubUsername: profile.githubUsername },
             {
                 ...profile,
-                profile,
                 followers,
                 stars,
                 languages,
+                profileCompleteness,
             },
             { upsert: true, new: true }
         );
