@@ -2,7 +2,7 @@ import cron from "node-cron";
 import AnalysisReport from "../models/AnalysisReport.js";
 
 export const cleanupCron = ()=>{
-    cronSchedule("0 3 * * *",async()=>{
+    cron.schedule("0 3 * * *",async()=>{
         console.log("cleanup cron started");
 
         const users = await AnalysisReport.distinct("userId");
