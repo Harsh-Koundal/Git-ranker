@@ -1,26 +1,55 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Github, TrendingUp, Award, Users, Code, Star, GitBranch, Activity, Zap, Globe, BarChart3, ChevronRight, Sparkles, Trophy, Target } from 'lucide-react';
-import {useNavigate} from "react-router-dom";
+import React, { useState, useEffect } from 'react';
+import { Github, TrendingUp, Award, Users, Code, Star, GitBranch, Activity, Globe, BarChart3, ChevronRight, Sparkles, Trophy, Target, Loader2, AlertCircle } from 'lucide-react';
 
 export default function Home() {
     const [username, setUsername] = useState('');
     const [isVisible, setIsVisible] = useState(false);
     const [hoveredCard, setHoveredCard] = useState(null);
-    const [scrollY, setScrollY] = useState(0);
-    const navigate = useNavigate();
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [error, setError] = useState('');
+    const [analysisResult, setAnalysisResult] = useState(null);
 
     useEffect(() => {
         setIsVisible(true);
-        const handleScroll = () => setScrollY(window.scrollY);
-        window.addEventListener('scroll', handleScroll);
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
     }, []);
 
-    const handleAnalyze = () => {
-        if (username.trim()) {
-            alert(`Analyzing profile: ${username}`);
+    const handleAnalyze = async () => {
+        if (!username.trim()) {
+            setError('Please enter a GitHub username');
+            return;
+        }
+
+        setIsAnalyzing(true);
+        setError('');
+        setAnalysisResult(null);
+
+        try {
+            const response = await fetch('http://localhost:5025/api/v1/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username.trim() }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Analysis failed');
+            }
+
+            setAnalysisResult(data);
+            
+            // Navigate to results page after 2 seconds
+            setTimeout(() => {
+                window.location.href = `/results/${username.trim()}`;
+            }, 2000);
+
+        } catch (err) {
+            setError(err.message || 'Failed to analyze profile. Please try again.');
+            console.error('Analysis error:', err);
+        } finally {
+            setIsAnalyzing(false);
         }
     };
 
@@ -41,7 +70,6 @@ export default function Home() {
     ];
 
     const maxCommits = Math.max(...contributionData.map(d => d.commits));
-
 
     const steps = [
         {
@@ -73,7 +101,6 @@ export default function Home() {
 
     return (
         <div className="min-h-screen text-white relative overflow-hidden bg-[#0b0d12]">
-
             {/* Hero Section */}
             <section className="relative z-10 px-6 pt-24 pb-40">
                 <div className={`max-w-7xl mx-auto transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
@@ -125,20 +152,59 @@ export default function Home() {
                                         type="text"
                                         placeholder="Enter your GitHub username"
                                         value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
-                                        className="flex-1 bg-transparent outline-none text-white placeholder-gray-500 text-lg"
+                                        onChange={(e) => {
+                                            setUsername(e.target.value);
+                                            setError('');
+                                        }}
+                                        onKeyPress={(e) => e.key === 'Enter' && !isAnalyzing && handleAnalyze()}
+                                        disabled={isAnalyzing}
+                                        className="flex-1 bg-transparent outline-none text-white placeholder-gray-500 text-lg disabled:opacity-50"
                                     />
                                 </div>
                                 <button
                                     onClick={handleAnalyze}
-                                    className="group/btn px-10 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl shadow-cyan-500/50 flex items-center justify-center gap-2"
+                                    disabled={isAnalyzing}
+                                    className="group/btn px-10 py-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl shadow-cyan-500/50 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                                 >
-                                    Analyze Now
-                                    <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                                    {isAnalyzing ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Analyzing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Analyze Now
+                                            <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>
+
+                        {/* Error Message */}
+                        {error && (
+                            <div className="mt-4 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                <p className="text-red-300 text-sm">{error}</p>
+                            </div>
+                        )}
+
+                        {/* Success Message */}
+                        {analysisResult && (
+                            <div className="mt-4 p-6 rounded-2xl bg-green-500/10 border border-green-500/30">
+                                <div className="flex items-center gap-3 mb-3">
+                                    <Sparkles className="w-5 h-5 text-green-400" />
+                                    <p className="text-green-300 font-semibold">Analysis Complete!</p>
+                                </div>
+                                <div className="space-y-2 text-sm text-gray-300">
+                                    <p>Username: <span className="text-white font-medium">{analysisResult.username}</span></p>
+                                    <p>Overall Score: <span className="text-white font-medium">{analysisResult.overallScore}</span></p>
+                                    <p>Level: <span className="text-white font-medium">{analysisResult.level}</span></p>
+                                    <p className="text-green-400 mt-3">Redirecting to results...</p>
+                                </div>
+                            </div>
+                        )}
+
                         <p className="text-center text-sm text-gray-500 mt-4">
                             Free analysis • No credit card required • Results in seconds
                         </p>
@@ -211,21 +277,16 @@ export default function Home() {
                                 onMouseLeave={() => setHoveredCard(null)}
                                 className="group relative"
                             >
-                                {/* Connecting Line */}
                                 {i < steps.length - 1 && (
                                     <div className="hidden md:block absolute top-1/4 left-full w-full h-0.5 bg-gradient-to-r from-purple-500/30 to-transparent z-0"></div>
                                 )}
 
-                                <div className={`relative p-10 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-white/10 transition-all duration-500 ${hoveredCard === i ? 'transform -translate-y-4 shadow-2xl shadow-purple-500/20 border-purple-500/30' : ''
-                                    }`}>
-                                    {/* Step Number */}
+                                <div className={`relative p-10 rounded-3xl bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-white/10 transition-all duration-500 ${hoveredCard === i ? 'transform -translate-y-4 shadow-2xl shadow-purple-500/20 border-purple-500/30' : ''}`}>
                                     <div className="absolute -top-4 -right-4 w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center font-bold text-xl shadow-lg">
                                         {i + 1}
                                     </div>
 
-                                    {/* Icon */}
-                                    <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-8 transition-all duration-500 ${hoveredCard === i ? 'scale-110 rotate-6' : ''
-                                        } shadow-lg`}>
+                                    <div className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${step.color} flex items-center justify-center mb-8 transition-all duration-500 ${hoveredCard === i ? 'scale-110 rotate-6' : ''} shadow-lg`}>
                                         {step.icon}
                                     </div>
 
@@ -251,7 +312,6 @@ export default function Home() {
                     </div>
 
                     <div className="relative">
-                        {/* Glow Effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 blur-3xl -z-10"></div>
 
                         <div className="rounded-3xl bg-gradient-to-br from-white/10 to-white/[0.02] p-1 backdrop-blur-sm border border-white/10">
@@ -270,7 +330,6 @@ export default function Home() {
                                             </div>
                                         </div>
 
-                                        {/* Quick Stats */}
                                         <div className="grid grid-cols-2 gap-4">
                                             {[
                                                 { icon: <Code className="w-7 h-7 text-purple-400" />, value: '847', label: 'Commits' },
@@ -289,7 +348,6 @@ export default function Home() {
 
                                     {/* Right: Charts */}
                                     <div className="space-y-6">
-                                        {/* Languages */}
                                         <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
                                             <div className="text-xl font-bold mb-6 flex items-center gap-2">
                                                 <Code className="w-5 h-5 text-purple-400" />
@@ -317,9 +375,7 @@ export default function Home() {
                                             </div>
                                         </div>
 
-                                        {/* Activity Graph */}
                                         <div className="p-8 rounded-3xl bg-white/5 border border-white/10">
-                                            {/* Header */}
                                             <div className="flex items-center justify-between mb-6">
                                                 <div className="flex items-center gap-2 text-xl font-bold">
                                                     <Activity className="w-5 h-5 text-pink-400" />
@@ -330,10 +386,7 @@ export default function Home() {
                                                 </span>
                                             </div>
 
-                                            {/* Chart */}
                                             <div className="relative h-40 flex items-end gap-3">
-
-                                                {/* Grid Lines */}
                                                 {[0, 25, 50, 75, 100].map((g) => (
                                                     <div
                                                         key={g}
@@ -347,45 +400,26 @@ export default function Home() {
 
                                                     return (
                                                         <div key={i} className="flex-1 group relative flex flex-col items-center">
-
-                                                            {/* Tooltip */}
                                                             <div className="absolute -top-8 scale-0 group-hover:scale-100 transition-transform bg-black/80 text-xs px-3 py-1 rounded-lg border border-white/10 text-white">
                                                                 {item.commits} commits
                                                             </div>
 
-                                                            {/* Bar */}
                                                             <div
-                                                                className="w-full rounded-xl bg-gradient-to-t from-purple-500 to-pink-500
-                       transition-all duration-700 ease-out
-                       group-hover:from-purple-400 group-hover:to-pink-400"
-                                                                style={{
-                                                                    height: `${height}%`,
-                                                                    animation: `grow 0.8s ease-out ${i * 0.1}s both`,
-                                                                }}
+                                                                className="w-full rounded-xl bg-gradient-to-t from-purple-500 to-pink-500 transition-all duration-700 ease-out group-hover:from-purple-400 group-hover:to-pink-400"
+                                                                style={{ height: `${height}%` }}
                                                             />
 
-                                                            {/* Label */}
                                                             <span className="mt-2 text-xs text-gray-400">{item.day}</span>
                                                         </div>
                                                     );
                                                 })}
                                             </div>
 
-                                            {/* Footer */}
                                             <div className="mt-6 flex justify-between text-sm text-gray-400">
                                                 <span>Last 7 days</span>
                                                 <span>Avg: 7 commits/day</span>
                                             </div>
-
-                                            {/* Animation */}
-                                            <style jsx>{`
-    @keyframes grow {
-      from { height: 0; }
-      to { height: 100%; }
-    }
-  `}</style>
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
@@ -408,8 +442,10 @@ export default function Home() {
                             <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto font-light">
                                 Join thousands of developers discovering their GitHub potential and competing globally
                             </p>
-                            <button className="group px-12 py-6 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 font-bold text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl shadow-cyan-500/50 flex items-center gap-3 mx-auto"
-                            onClick={()=>navigate("/")}>
+                            <button 
+                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                className="group px-12 py-6 rounded-2xl bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 font-bold text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl shadow-cyan-500/50 flex items-center gap-3 mx-auto"
+                            >
                                 Start Free Analysis
                                 <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
                             </button>
@@ -418,25 +454,23 @@ export default function Home() {
                 </div>
             </section>
 
-
-
             <style jsx>{`
-        @keyframes scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-scroll {
-          animation: scroll 30s linear infinite;
-        }
-        @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-        .animate-gradient {
-          animation: gradient 3s ease infinite;
-        }
-      `}</style>
+                @keyframes scroll {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+                .animate-scroll {
+                    animation: scroll 30s linear infinite;
+                }
+                @keyframes gradient {
+                    0% { background-position: 0% 50%; }
+                    50% { background-position: 100% 50%; }
+                    100% { background-position: 0% 50%; }
+                }
+                .animate-gradient {
+                    animation: gradient 3s ease infinite;
+                }
+            `}</style>
         </div>
     );
 }
