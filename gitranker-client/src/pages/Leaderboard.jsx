@@ -7,164 +7,63 @@ export default function Leaderboard() {
     const [filterLanguage, setFilterLanguage] = useState('all');
     const [hoveredRank, setHoveredRank] = useState(null);
     const [isVisible, setIsVisible] = useState(false);
+    const [topDevelopers, setTopDevelopers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [totalDevelopers, setTotalDevelopers] = useState(0);
+
+    const leaderboardData = async () => {
+        try {
+            setLoading(true);
+            const apiUrl = import.meta.env?.VITE_API_URL || 'http://localhost:5025';
+            const res = await fetch(`${apiUrl}/api/v1/leaderboard`);
+
+            if (!res.ok) {
+                throw new Error('Failed to fetch leaderboard data');
+            }
+
+            const data = await res.json();
+
+            setTopDevelopers(
+                data.leaderboard.map((u, index) => ({
+                    rank: index + 1,
+                    name: u.name || 'Unknown',
+                    username: u.username || 'unknown',
+                    location: u.location || 'Unknown',
+                    score: u.score || 0,
+                    avatar: u.avatarUrl ? (
+                        <img
+                            src={u.avatarUrl}
+                            alt={u.username}
+                            className="w-full h-full object-cover rounded-xl"
+                        />
+                    ) : (
+                        <Github className="w-10 h-10 text-gray-400" />
+                    ),
+                    repos: u.repos || 0,
+                    stars: u.stars || 0,
+                    commits: u.commits || 0,
+                    language: u.primaryLanguage || 'Unknown',
+                    trend: "same",
+                    trendValue: 0,
+                    badges: u.badges || [],
+                }))
+            );
+            setTotalDevelopers(data.leaderboard.length);
+            console.log('Fetched leaderboard data:', data.leaderboard);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching leaderboard:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         setIsVisible(true);
+        leaderboardData();
     }, []);
-
-    // Mock data - replace with real API data
-    const topDevelopers = [
-        {
-            rank: 1,
-            name: 'Sarah Chen',
-            username: 'sarahc',
-            location: 'San Francisco, USA',
-            score: 98,
-            avatar: '👩‍💻',
-            repos: 156,
-            stars: 12400,
-            commits: 8934,
-            language: 'JavaScript',
-            trend: 'up',
-            trendValue: 2,
-            badges: ['🏆', '⭐', '🔥']
-        },
-        {
-            rank: 2,
-            name: 'Alex Kumar',
-            username: 'alexkumar',
-            location: 'Bangalore, India',
-            score: 96,
-            avatar: '👨‍💻',
-            repos: 143,
-            stars: 10200,
-            commits: 7821,
-            language: 'Python',
-            trend: 'down',
-            trendValue: 1,
-            badges: ['🥈', '⭐', '💎']
-        },
-        {
-            rank: 3,
-            name: 'Maria Garcia',
-            username: 'mariagarcia',
-            location: 'Barcelona, Spain',
-            score: 95,
-            avatar: '👩‍🔬',
-            repos: 128,
-            stars: 9800,
-            commits: 7234,
-            language: 'TypeScript',
-            trend: 'up',
-            trendValue: 3,
-            badges: ['🥉', '⭐', '🚀']
-        },
-        {
-            rank: 4,
-            name: 'James Wilson',
-            username: 'jameswilson',
-            location: 'London, UK',
-            score: 93,
-            avatar: '👨‍🎨',
-            repos: 134,
-            stars: 8900,
-            commits: 6890,
-            language: 'Go',
-            trend: 'same',
-            trendValue: 0,
-            badges: ['⭐', '🔥']
-        },
-        {
-            rank: 5,
-            name: 'Yuki Tanaka',
-            username: 'yukitanaka',
-            location: 'Tokyo, Japan',
-            score: 92,
-            avatar: '👨‍🚀',
-            repos: 119,
-            stars: 8500,
-            commits: 6543,
-            language: 'Rust',
-            trend: 'up',
-            trendValue: 1,
-            badges: ['⭐', '💎', '🎯']
-        },
-        {
-            rank: 6,
-            name: 'Emma Schmidt',
-            username: 'emmaschmidt',
-            location: 'Berlin, Germany',
-            score: 91,
-            avatar: '👩‍🏫',
-            repos: 112,
-            stars: 7800,
-            commits: 6123,
-            language: 'Java',
-            trend: 'up',
-            trendValue: 2,
-            badges: ['⭐', '🔥']
-        },
-        {
-            rank: 7,
-            name: 'David Park',
-            username: 'davidpark',
-            location: 'Seoul, South Korea',
-            score: 90,
-            avatar: '👨‍💼',
-            repos: 105,
-            stars: 7200,
-            commits: 5890,
-            language: 'C++',
-            trend: 'down',
-            trendValue: 2,
-            badges: ['⭐', '🚀']
-        },
-        {
-            rank: 8,
-            name: 'Sophie Martin',
-            username: 'sophiemartin',
-            location: 'Paris, France',
-            score: 89,
-            avatar: '👩‍🔧',
-            repos: 98,
-            stars: 6900,
-            commits: 5678,
-            language: 'Python',
-            trend: 'up',
-            trendValue: 1,
-            badges: ['⭐', '💎']
-        },
-        {
-            rank: 9,
-            name: 'Lucas Silva',
-            username: 'lucassilva',
-            location: 'São Paulo, Brazil',
-            score: 88,
-            avatar: '👨‍🏭',
-            repos: 92,
-            stars: 6500,
-            commits: 5432,
-            language: 'JavaScript',
-            trend: 'same',
-            trendValue: 0,
-            badges: ['⭐', '🔥']
-        },
-        {
-            rank: 10,
-            name: 'Aisha Rahman',
-            username: 'aisharahman',
-            location: 'Dubai, UAE',
-            score: 87,
-            avatar: '👩‍⚕️',
-            repos: 88,
-            stars: 6200,
-            commits: 5234,
-            language: 'Swift',
-            trend: 'up',
-            trendValue: 3,
-            badges: ['⭐', '🎯']
-        }
-    ];
 
     const categories = [
         { id: 'global', label: 'Global', icon: <Globe className="w-4 h-4" /> },
@@ -195,11 +94,19 @@ export default function Leaderboard() {
     };
 
     const filteredDevelopers = topDevelopers.filter(dev => {
-        const matchesSearch = dev.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            dev.username.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = dev.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            dev.username.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesLanguage = filterLanguage === 'all' || dev.language === filterLanguage;
         return matchesSearch && matchesLanguage;
     });
+
+    if (loading) {
+        return (
+            <div className="min-h-screen text-white relative overflow-hidden bg-[#0b0d12] flex items-center justify-center">
+                <div className="text-2xl">Loading...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen text-white relative overflow-hidden bg-[#0b0d12]">
@@ -227,11 +134,12 @@ export default function Leaderboard() {
             </section>
 
             {/* Stats Bar */}
+
             <section className="relative z-10 px-6 pb-12">
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                         {[
-                            { label: 'Total Developers', value: '10,842', icon: <Award className="w-5 h-5" />, color: 'from-blue-500 to-cyan-500' },
+                            { label: 'Total Developers', value: `${totalDevelopers} `, icon: <Award className="w-5 h-5" />, color: 'from-blue-500 to-cyan-500' },
                             { label: 'Countries', value: '120+', icon: <Globe className="w-5 h-5" />, color: 'from-purple-500 to-pink-500' },
                             { label: 'Total Commits', value: '2.4M', icon: <GitBranch className="w-5 h-5" />, color: 'from-green-500 to-emerald-500' },
                             { label: 'Active Today', value: '3,247', icon: <Zap className="w-5 h-5" />, color: 'from-orange-500 to-red-500' }
@@ -260,11 +168,10 @@ export default function Leaderboard() {
                                 <button
                                     key={cat.id}
                                     onClick={() => setFilterCategory(cat.id)}
-                                    className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                                        filterCategory === cat.id
-                                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
-                                            : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10'
-                                    }`}
+                                    className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all duration-300 ${filterCategory === cat.id
+                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
+                                        : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/10'
+                                        }`}
                                 >
                                     {cat.icon}
                                     <span>{cat.label}</span>
@@ -304,82 +211,84 @@ export default function Leaderboard() {
             </section>
 
             {/* Top 3 Podium */}
-            <section className="relative z-10 px-6 pb-12">
-                <div className="max-w-7xl mx-auto">
-                    <div className="flex items-end justify-center gap-8 mb-16">
-                        {/* 2nd Place */}
-                        <div className="flex flex-col items-center w-72">
-                            <div className="relative mb-6">
-                                <div className="w-28 h-28 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-6xl border-4 border-white/10 shadow-2xl">
-                                    {topDevelopers[1].avatar}
+            {topDevelopers.length >= 3 && (
+                <section className="relative z-10 px-6 pb-12">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex items-end justify-center gap-8 mb-16">
+                            {/* 2nd Place */}
+                            <div className="flex flex-col items-center w-72">
+                                <div className="relative mb-6">
+                                    <div className="w-28 h-28 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-6xl border-4 border-white/10 shadow-2xl">
+                                        {topDevelopers[1].avatar}
+                                    </div>
+                                    <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-gray-400 to-gray-600 text-white font-bold text-sm shadow-lg">
+                                        #2
+                                    </div>
                                 </div>
-                                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-gray-400 to-gray-600 text-white font-bold text-sm shadow-lg">
-                                    #2
+                                <h3 className="text-2xl font-bold mb-1">{topDevelopers[1].name}</h3>
+                                <p className="text-gray-400 text-sm mb-3">@{topDevelopers[1].username}</p>
+                                <div className="text-5xl font-black bg-gradient-to-r from-gray-400 to-gray-600 bg-clip-text text-transparent mb-4">
+                                    {topDevelopers[1].score}
                                 </div>
+                                <div className="flex gap-2 mb-4">
+                                    {topDevelopers[1].badges.map((badge, i) => (
+                                        <span key={i} className="text-2xl">{badge}</span>
+                                    ))}
+                                </div>
+                                <div className="h-40 w-full rounded-t-2xl bg-gradient-to-t from-gray-500/20 to-gray-400/20 border border-white/10 border-b-0"></div>
                             </div>
-                            <h3 className="text-2xl font-bold mb-1">{topDevelopers[1].name}</h3>
-                            <p className="text-gray-400 text-sm mb-3">@{topDevelopers[1].username}</p>
-                            <div className="text-5xl font-black bg-gradient-to-r from-gray-400 to-gray-600 bg-clip-text text-transparent mb-4">
-                                {topDevelopers[1].score}
-                            </div>
-                            <div className="flex gap-2 mb-4">
-                                {topDevelopers[1].badges.map((badge, i) => (
-                                    <span key={i} className="text-2xl">{badge}</span>
-                                ))}
-                            </div>
-                            <div className="h-40 w-full rounded-t-2xl bg-gradient-to-t from-gray-500/20 to-gray-400/20 border border-white/10 border-b-0"></div>
-                        </div>
 
-                        {/* 1st Place */}
-                        <div className="flex flex-col items-center w-80 -mt-8">
-                            <Crown className="w-12 h-12 text-yellow-400 fill-yellow-400 mb-4 animate-bounce" />
-                            <div className="relative mb-6">
-                                <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 blur-xl opacity-50 animate-pulse"></div>
-                                <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-6xl border-4 border-yellow-300 shadow-2xl">
-                                    {topDevelopers[0].avatar}
+                            {/* 1st Place */}
+                            <div className="flex flex-col items-center w-80 -mt-8">
+                                <Crown className="w-12 h-12 text-yellow-400 fill-yellow-400 mb-4 animate-bounce" />
+                                <div className="relative mb-6">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-orange-500 blur-xl opacity-50 animate-pulse"></div>
+                                    <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-6xl border-4 border-yellow-300 shadow-2xl">
+                                        {topDevelopers[0].avatar}
+                                    </div>
+                                    <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-5 py-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold shadow-lg">
+                                        #1
+                                    </div>
                                 </div>
-                                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-5 py-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-bold shadow-lg">
-                                    #1
+                                <h3 className="text-3xl font-bold mb-1">{topDevelopers[0].name}</h3>
+                                <p className="text-gray-400 mb-3">@{topDevelopers[0].username}</p>
+                                <div className="text-6xl font-black bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent mb-4">
+                                    {topDevelopers[0].score}
                                 </div>
+                                <div className="flex gap-2 mb-4">
+                                    {topDevelopers[0].badges.map((badge, i) => (
+                                        <span key={i} className="text-3xl">{badge}</span>
+                                    ))}
+                                </div>
+                                <div className="h-56 w-full rounded-t-2xl bg-gradient-to-t from-yellow-500/20 to-orange-500/20 border border-white/10 border-b-0"></div>
                             </div>
-                            <h3 className="text-3xl font-bold mb-1">{topDevelopers[0].name}</h3>
-                            <p className="text-gray-400 mb-3">@{topDevelopers[0].username}</p>
-                            <div className="text-6xl font-black bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent mb-4">
-                                {topDevelopers[0].score}
-                            </div>
-                            <div className="flex gap-2 mb-4">
-                                {topDevelopers[0].badges.map((badge, i) => (
-                                    <span key={i} className="text-3xl">{badge}</span>
-                                ))}
-                            </div>
-                            <div className="h-56 w-full rounded-t-2xl bg-gradient-to-t from-yellow-500/20 to-orange-500/20 border border-white/10 border-b-0"></div>
-                        </div>
 
-                        {/* 3rd Place */}
-                        <div className="flex flex-col items-center w-72">
-                            <div className="relative mb-6">
-                                <div className="w-28 h-28 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center text-6xl border-4 border-white/10 shadow-2xl">
-                                    {topDevelopers[2].avatar}
+                            {/* 3rd Place */}
+                            <div className="flex flex-col items-center w-72">
+                                <div className="relative mb-6">
+                                    <div className="w-28 h-28 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 flex items-center justify-center text-6xl border-4 border-white/10 shadow-2xl">
+                                        {topDevelopers[2].avatar}
+                                    </div>
+                                    <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-600 to-amber-800 text-white font-bold text-sm shadow-lg">
+                                        #3
+                                    </div>
                                 </div>
-                                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 px-4 py-1 rounded-full bg-gradient-to-r from-amber-600 to-amber-800 text-white font-bold text-sm shadow-lg">
-                                    #3
+                                <h3 className="text-2xl font-bold mb-1">{topDevelopers[2].name}</h3>
+                                <p className="text-gray-400 text-sm mb-3">@{topDevelopers[2].username}</p>
+                                <div className="text-5xl font-black bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent mb-4">
+                                    {topDevelopers[2].score}
                                 </div>
+                                <div className="flex gap-2 mb-4">
+                                    {topDevelopers[2].badges.map((badge, i) => (
+                                        <span key={i} className="text-2xl">{badge}</span>
+                                    ))}
+                                </div>
+                                <div className="h-32 w-full rounded-t-2xl bg-gradient-to-t from-amber-600/20 to-amber-800/20 border border-white/10 border-b-0"></div>
                             </div>
-                            <h3 className="text-2xl font-bold mb-1">{topDevelopers[2].name}</h3>
-                            <p className="text-gray-400 text-sm mb-3">@{topDevelopers[2].username}</p>
-                            <div className="text-5xl font-black bg-gradient-to-r from-amber-600 to-amber-800 bg-clip-text text-transparent mb-4">
-                                {topDevelopers[2].score}
-                            </div>
-                            <div className="flex gap-2 mb-4">
-                                {topDevelopers[2].badges.map((badge, i) => (
-                                    <span key={i} className="text-2xl">{badge}</span>
-                                ))}
-                            </div>
-                            <div className="h-32 w-full rounded-t-2xl bg-gradient-to-t from-amber-600/20 to-amber-800/20 border border-white/10 border-b-0"></div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {/* Rankings List */}
             <section className="relative z-10 px-6 pb-32">
@@ -390,9 +299,8 @@ export default function Leaderboard() {
                                 key={dev.rank}
                                 onMouseEnter={() => setHoveredRank(dev.rank)}
                                 onMouseLeave={() => setHoveredRank(null)}
-                                className={`group relative p-6 rounded-2xl bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-white/10 transition-all duration-300 ${
-                                    hoveredRank === dev.rank ? 'transform -translate-y-1 shadow-xl shadow-purple-500/20 border-purple-500/30 bg-white/10' : ''
-                                }`}
+                                className={`group relative p-6 rounded-2xl bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm border border-white/10 transition-all duration-300 ${hoveredRank === dev.rank ? 'transform -translate-y-1 shadow-xl shadow-purple-500/20 border-purple-500/30 bg-white/10' : ''
+                                    }`}
                             >
                                 <div className="flex items-center gap-6">
                                     {/* Rank */}
@@ -417,9 +325,8 @@ export default function Leaderboard() {
 
                                     {/* Avatar & Info */}
                                     <div className="flex items-center gap-4 flex-1">
-                                        <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${getRankColor(dev.rank)} flex items-center justify-center text-4xl shadow-lg transition-transform duration-300 ${
-                                            hoveredRank === dev.rank ? 'scale-110' : ''
-                                        }`}>
+                                        <div className={`w-16 h-16 rounded-xl bg-gradient-to-br ${getRankColor(dev.rank)} flex items-center justify-center text-4xl shadow-lg transition-transform duration-300 ${hoveredRank === dev.rank ? 'scale-110' : ''
+                                            }`}>
                                             {dev.avatar}
                                         </div>
                                         <div className="flex-1">
