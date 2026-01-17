@@ -21,10 +21,10 @@ export default function Result() {
 
     try {
       const response = await axios.get(`http://localhost:5025/api/v1/result/${username}`);
-      
+
       const data = await response.data;
       console.log('API Response:', data);
-      
+
       // Add color mapping for category scores
       const colorMap = {
         consistency: 'from-blue-400 to-blue-600',
@@ -42,7 +42,7 @@ export default function Result() {
           color: colorMap[key] || 'from-gray-400 to-gray-600'
         };
       });
-      
+
       // Transform API data to match component structure
       const transformedData = {
         username: data.profile.username || username,
@@ -55,14 +55,14 @@ export default function Result() {
         accountAge: `${data.profile.accountAgeYears || 0} years`,
         createdDate: data.profile.accountCreatedAt ? new Date(data.profile.accountCreatedAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'N/A',
         avatar: data.profile.avatar || `https://github.com/${username}.png`,
-        
+
         overallScore: data.report.overallScore || 0,
-        globalRank: data.report.globalRank || "N/A",
+        globalRank: data.profile.rank || "N/A",
         percentile: data.report.percentile || "N/A",
         level: data.report.level || "Developer",
-        
+
         categoryScores: categoryScoresWithColors,
-        
+
         completeness: {
           bio: data.profile.profileCompleteness?.bio || false,
           avatar: data.profile.profileCompleteness?.avatar || false,
@@ -71,7 +71,7 @@ export default function Result() {
           links: data.profile.profileCompleteness?.externalLinks || false,
           score: data.profile.profileCompleteness?.score || 0
         },
-        
+
         repositories: {
           total: data.report.repositories?.total || 0,
           original: data.report.repositories?.original || 0,
@@ -79,20 +79,21 @@ export default function Result() {
           archived: data.report.repositories?.archived || 0,
           active: data.report.repositories?.active || 0
         },
-        
+
         stars: {
           total: data.report.stars?.total || 0,
           avgPerRepo: data.report.stars?.avgPerRepo || 0,
-          topRepo: data.report.stars?.topRepo || { name: "N/A", stars: 0 },
+          topRepos: data.report.stars?.topRepos || [],
           growth: data.report.stars?.growthPercentage || "+0%"
         },
-        
+
+
         followers: {
           total: data.report.followers?.total || 0,
           growth: data.report.followers?.growthPercentage || "+0%",
           ratio: data.report.followers?.followerFollowingRatio || 0
         },
-        
+
         commits: {
           total: data.report.commits?.total || 0,
           last7days: data.report.commits?.last7days || 0,
@@ -103,45 +104,46 @@ export default function Result() {
           firstCommit: data.report.commits?.firstCommitDate || "N/A",
           lastCommit: data.report.commits?.lastCommitDate || "N/A"
         },
-        
+
         streak: {
           current: data.report.streak?.current || 0,
           longest: data.report.streak?.longest || 0,
           average: data.report.streak?.average || 0,
           breaks: data.report.streak?.breaks || 0
         },
-        
+
         activity: {
           activeDays: data.report.activity?.activeDaysPercentage || 0,
           inactiveDays: data.report.activity?.inactiveDaysPercentage || 0,
           consistency: data.report.activity?.consistencyLabel || "N/A",
           trend: data.report.activity?.trend || "stable"
         },
-        
+
         languages: (data.report.languages || []).map(lang => ({
           name: lang.name || 'Unknown',
           percent: lang.percentage || 0,
-          commits: lang.commits || 0,
+          bytes: lang.bytes || 0,
           color: lang.color || "from-gray-400 to-gray-600"
         })),
-        
+
+
         pullRequests: {
           created: data.report.pullRequests?.created || 0,
           merged: data.report.pullRequests?.merged || 0,
           acceptanceRate: data.report.pullRequests?.acceptanceRate || 0,
           externalRepos: data.report.pullRequests?.externalRepos || 0
         },
-        
+
         issues: {
           opened: data.report.issues?.opened || 0,
           closed: data.report.issues?.closed || 0,
           participationRate: data.report.issues?.participationRate || 0
         },
-        
+
         weekdayActivity: data.report.weekdayActivity || [],
-        
+
         contributionHeatmap: data.report.monthlyHeatmap || [],
-        
+
         strengths: generateStrengths(data),
         weaknesses: generateWeaknesses(data),
         suggestions: generateSuggestions(data)
@@ -159,74 +161,74 @@ export default function Result() {
   const generateStrengths = (data) => {
     const strengths = [];
     const report = data.report;
-    
+
     if (report.streak?.current > 30) {
       strengths.push(`Exceptional consistency with ${report.streak.current}-day active streak`);
     }
-    
+
     if (report.languages?.length > 0) {
       const topLang = report.languages[0];
       strengths.push(`Strong ${topLang.name} expertise with ${topLang.percentage}% contribution`);
     }
-    
+
     if (report.pullRequests?.acceptanceRate > 80) {
       strengths.push(`Excellent open-source engagement with ${report.pullRequests.acceptanceRate}% PR acceptance rate`);
     }
-    
+
     if (data.profile.profileCompleteness?.score > 80) {
       strengths.push("Well-maintained profile with complete documentation");
     }
-    
+
     if (report.commits?.perDayAverage > 5) {
       strengths.push(`High productivity with ${report.commits.perDayAverage} commits per day`);
     }
-    
+
     return strengths.length > 0 ? strengths : ["Continue building your GitHub presence"];
   };
 
   const generateWeaknesses = (data) => {
     const weaknesses = [];
     const report = data.report;
-    
+
     if (report.repositories?.total < 10) {
       weaknesses.push("Could increase repository diversity");
     }
-    
+
     if (report.commits?.perDayAverage < 2) {
       weaknesses.push("Consider increasing daily commit frequency");
     }
-    
+
     if (report.pullRequests?.externalRepos < 10) {
       weaknesses.push("Limited contributions to external projects");
     }
-    
+
     if (data.profile.profileCompleteness?.score < 50) {
       weaknesses.push("Profile could be more complete");
     }
-    
+
     return weaknesses.length > 0 ? weaknesses : ["Keep up the great work!"];
   };
 
   const generateSuggestions = (data) => {
     const suggestions = [];
     const report = data.report;
-    
+
     if (report.streak?.current > 0 && report.streak.current < 30) {
       suggestions.push("Maintain your consistency streak - you're building momentum!");
     }
-    
+
     suggestions.push("Consider contributing to more high-impact open source projects");
-    
+
     if (report.languages?.length < 3) {
       suggestions.push("Explore adding more languages to broaden your skill set");
     }
-    
+
     if (data.profile.profileCompleteness?.score < 80) {
       suggestions.push("Complete your profile with README and pinned repositories");
     }
-    
+
     suggestions.push("Document your projects with comprehensive README files");
-    
+
     return suggestions;
   };
 
@@ -264,8 +266,8 @@ export default function Result() {
 
   if (!profileData) return null;
 
-  const maxWeekdayCommits = profileData.weekdayActivity.length > 0 
-    ? Math.max(...profileData.weekdayActivity.map(d => d.commits || 0)) 
+  const maxWeekdayCommits = profileData.weekdayActivity.length > 0
+    ? Math.max(...profileData.weekdayActivity.map(d => d.commits || 0))
     : 1;
   const maxMonthlyCommits = profileData.contributionHeatmap.length > 0
     ? Math.max(...profileData.contributionHeatmap.map(d => d.commits || 0))
@@ -295,12 +297,12 @@ export default function Result() {
                   <Trophy className="w-5 h-5" />
                 </div>
               </div>
-              
+
               <div>
                 <h2 className="text-4xl font-black mb-2">{profileData.fullName}</h2>
                 <p className="text-xl text-purple-400 mb-3">@{profileData.username}</p>
                 <p className="text-gray-400 mb-4 max-w-xl leading-relaxed">{profileData.bio}</p>
-                
+
                 <div className="flex flex-wrap gap-3 mb-4">
                   {profileData.location && (
                     <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -319,7 +321,7 @@ export default function Result() {
                     Joined {profileData.createdDate}
                   </div>
                 </div>
-                
+
                 {(profileData.website || profileData.twitter) && (
                   <div className="flex gap-2">
                     {profileData.website && (
@@ -348,12 +350,12 @@ export default function Result() {
                     {profileData.level}
                   </span>
                 </div>
-                
+
                 <div className="text-7xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent mb-2">
                   {profileData.overallScore}
                 </div>
                 <div className="text-sm text-gray-400 mb-4">Overall Score</div>
-                
+
                 <div className="flex gap-4 justify-center text-center">
                   <div>
                     <div className="text-2xl font-bold text-green-400">{profileData.globalRank}</div>
@@ -379,11 +381,10 @@ export default function Result() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 border-b-2 transition-all whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-purple-500 text-white'
-                    : 'border-transparent text-gray-400 hover:text-white'
-                }`}
+                className={`flex items-center gap-2 px-6 py-4 border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id
+                  ? 'border-purple-500 text-white'
+                  : 'border-transparent text-gray-400 hover:text-white'
+                  }`}
               >
                 {tab.icon}
                 {tab.label}
@@ -414,7 +415,7 @@ export default function Result() {
                       {data.score}
                     </div>
                     <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                      <div 
+                      <div
                         className={`h-full bg-gradient-to-r ${data.color} transition-all duration-1000`}
                         style={{ width: `${data.score}%` }}
                       ></div>
@@ -504,7 +505,7 @@ export default function Result() {
                 </h3>
                 <div className="text-4xl font-black text-green-400">{profileData.completeness.score}%</div>
               </div>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {Object.entries(profileData.completeness).filter(([key]) => key !== 'score').map(([key, value]) => (
                   <div key={key} className="flex items-center gap-3 p-4 rounded-xl bg-white/5">
@@ -532,7 +533,10 @@ export default function Result() {
                       <div className="flex justify-between items-center mb-3">
                         <div className="flex items-center gap-3">
                           <span className="font-bold text-lg">{lang.name}</span>
-                          <span className="text-sm text-gray-400">{lang.commits.toLocaleString()} commits</span>
+                          <span className="text-sm text-gray-400">
+                            {(lang.bytes / 1024).toFixed(1)} KB
+                          </span>
+
                         </div>
                         <span className="text-2xl font-bold">{lang.percent.toFixed(1)}%</span>
                       </div>
@@ -585,7 +589,7 @@ export default function Result() {
                 <GitCommit className="w-6 h-6 text-purple-400" />
                 Commit History
               </h3>
-              
+
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
                 {[
                   { label: 'Last 7 days', value: profileData.commits.last7days },
@@ -614,7 +618,7 @@ export default function Result() {
                   <Calendar className="w-6 h-6 text-blue-400" />
                   Weekly Pattern
                 </h3>
-                
+
                 <div className="h-64 flex items-end gap-4">
                   {profileData.weekdayActivity.map((item, i) => {
                     const height = maxWeekdayCommits > 0 ? (item.commits / maxWeekdayCommits) * 100 : 0;
@@ -623,12 +627,12 @@ export default function Result() {
                         <div className="absolute -top-12 scale-0 group-hover:scale-100 transition-transform bg-black/90 text-sm px-4 py-2 rounded-xl border border-white/10 whitespace-nowrap z-10">
                           {item.commits} commits
                         </div>
-                        
+
                         <div
                           className="w-full rounded-t-2xl bg-gradient-to-t from-blue-500 to-cyan-500 transition-all duration-700 group-hover:from-blue-400 group-hover:to-cyan-400"
                           style={{ height: `${Math.max(height, 2)}%`, minHeight: '4px' }}
                         />
-                        
+
                         <span className="mt-3 text-sm text-gray-400">{item.day}</span>
                       </div>
                     );
@@ -644,7 +648,7 @@ export default function Result() {
                   <BarChart3 className="w-6 h-6 text-purple-400" />
                   Yearly Overview
                 </h3>
-                
+
                 <div className="grid grid-cols-12 gap-2">
                   {profileData.contributionHeatmap.map((item, i) => {
                     const intensity = maxMonthlyCommits > 0 ? (item.commits / maxMonthlyCommits) * 100 : 0;
@@ -653,9 +657,9 @@ export default function Result() {
                         <div className="absolute -top-16 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-transform bg-black/90 text-sm px-4 py-2 rounded-xl border border-white/10 whitespace-nowrap z-10">
                           {item.month}: {item.commits} commits
                         </div>
-                        
-                        <div className="aspect-square rounded-lg bg-purple-500 transition-all hover:scale-110" 
-                             style={{ opacity: Math.max(intensity / 100, 0.1) }}
+
+                        <div className="aspect-square rounded-lg bg-purple-500 transition-all hover:scale-110"
+                          style={{ opacity: Math.max(intensity / 100, 0.1) }}
                         />
                         <div className="text-xs text-center mt-2 text-gray-500">{item.month}</div>
                       </div>
@@ -674,7 +678,7 @@ export default function Result() {
                 <Target className="w-6 h-6 text-green-400" />
                 Repository Quality
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-6 rounded-2xl bg-green-500/10 border border-green-500/20">
                   <div className="flex items-center justify-between mb-3">
@@ -715,25 +719,34 @@ export default function Result() {
             </div>
 
             {/* Top Repository */}
-            {profileData.stars.topRepo.name !== "N/A" && (
+            {profileData.stars.topRepos.length > 0 && (
               <div className="p-8 rounded-3xl bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border border-yellow-500/20">
                 <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
                   <Star className="w-6 h-6 text-yellow-400" />
-                  Top Repository
+                  Top Starred Repositories
                 </h3>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-3xl font-bold mb-2">{profileData.stars.topRepo.name}</h4>
-                    <p className="text-gray-400">Most starred repository</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-5xl font-black text-yellow-400 mb-2">{profileData.stars.topRepo.stars}</div>
-                    <div className="text-sm text-gray-400">stars</div>
-                  </div>
+
+                <div className="space-y-4">
+                  {profileData.stars.topRepos.map((repo, i) => (
+                    <div
+                      key={repo.name}
+                      className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-bold">#{i + 1}</span>
+                        <span className="text-xl font-semibold">{repo.name}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-yellow-400">
+                        <Star className="w-5 h-5" />
+                        <span className="text-xl font-bold">{repo.stars}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
+
           </div>
         )}
 
@@ -769,7 +782,7 @@ export default function Result() {
                 <TrendingUp className="w-6 h-6 text-green-400" />
                 Contribution Metrics
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <div className="text-sm text-gray-400 mb-4">Pull Requests</div>

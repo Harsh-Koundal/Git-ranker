@@ -60,25 +60,31 @@ export const normalizeRepositories = (repos) => {
 };
 
 // Stars Metrics 
-export const normalizeStars = (repos)=>{
-    const totalStars = repos.reduce(
-        (sum,repo) => sum+repo.stargazers_count,
-        0
-    );
+export const normalizeStars = (repos) => {
+  const totalStars = repos.reduce(
+    (sum, repo) => sum + repo.stargazers_count,
+    0
+  );
 
-    const topRepo = repos.reduce(
-        (max,repo)=> repo.stargazers_count > max.stars ? {name:repo.name,stars:repo.stargazers_count} : max,
-        {name:null,stars:0}
-    );
-    return {
-        total: totalStars,
+  const topRepos = repos
+    .filter((repo) => repo.stargazers_count > 0)
+    .sort((a, b) => b.stargazers_count - a.stargazers_count)
+    .slice(0, 5)
+    .map((repo) => ({
+      name: repo.name,
+      stars: repo.stargazers_count,
+    }));
+
+  return {
+    total: totalStars,
     avgPerRepo: repos.length
       ? Math.round(totalStars / repos.length)
       : 0,
-    topRepo,
-
-    };
+    topRepos,
+  };
 };
+
+
 
 // Followers
 export const normalizeFollowers = (user) => {
@@ -104,10 +110,7 @@ export const normalizeLanguages = (repoLanguagesMap) => {
     });
   });
 
-  const totalBytes = Object.values(aggregate).reduce(
-    (a, b) => a + b,
-    0
-  );
+  const totalBytes = Object.values(aggregate).reduce((a, b) => a + b, 0);
 
   return Object.entries(aggregate)
     .map(([name, bytes]) => ({
@@ -115,7 +118,7 @@ export const normalizeLanguages = (repoLanguagesMap) => {
       percentage: totalBytes
         ? Math.round((bytes / totalBytes) * 100)
         : 0,
-      commits: Math.round(bytes / 50), // heuristic
+      bytes, 
       color: "from-purple-500 to-pink-500",
     }))
     .sort((a, b) => b.percentage - a.percentage);
