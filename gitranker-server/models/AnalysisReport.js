@@ -1,22 +1,22 @@
 import mongoose from "mongoose";
 
 const CategoryScoreSchema = new mongoose.Schema({
-    score:Number,
-    weight:Number,
-},{_id:false});
+  score: Number,
+  weight: Number,
+}, { _id: false });
 
 const LanguageSchema = new mongoose.Schema({
-    name:String,
-    percentage:Number,
-    commits:Number,
-    color:String,
-},{_id:false});
+  name: String,
+  percentage: Number,
+  commits: Number,
+  color: String,
+}, { _id: false });
 
 
 const AnalysisReportsSchema = new mongoose.Schema({
-    userId:{type:mongoose.Schema.Types.ObjectId,ref:"UserProfile",required:true},
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "UserProfile", required: true },
 
-    overallScore: Number,
+  overallScore: Number,
   level: String,
   globalRank: String,
   percentile: String,
@@ -47,7 +47,7 @@ const AnalysisReportsSchema = new mongoose.Schema({
     growthPercentage: String,
   },
 
-   followers: {
+  followers: {
     total: Number,
     growthPercentage: String,
     followerFollowingRatio: Number,
@@ -64,14 +64,14 @@ const AnalysisReportsSchema = new mongoose.Schema({
     lastCommitDate: String,
   },
 
-   streak: {
+  streak: {
     current: Number,
     longest: Number,
     average: Number,
     breaks: Number,
   },
 
-   activity: {
+  activity: {
     activeDaysPercentage: Number,
     inactiveDaysPercentage: Number,
     consistencyLabel: String,
@@ -95,6 +95,6 @@ const AnalysisReportsSchema = new mongoose.Schema({
 
   analyzedAt: { type: Date, default: Date.now },
 
-},{timestamps:true});
+}, { timestamps: true });
 
-export default mongoose.model("AnalysisReport",AnalysisReportsSchema);
+export default mongoose.model("AnalysisReport", AnalysisReportsSchema);

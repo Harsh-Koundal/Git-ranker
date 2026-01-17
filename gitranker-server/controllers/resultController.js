@@ -1,61 +1,46 @@
 import UserProfile from "../models/UserProfile.js";
 import AnalysisReport from "../models/AnalysisReport.js";
 
-// get result
 export const getResult = async (req, res, next) => {
-    try {
-        const { username } = req.params;
+  try {
+    const { username } = req.params;
 
-        if (!username) return res.status(400).json({ message: "Username is required" });
+    const user = await UserProfile.findOne({
+      githubUsername: username,
+    }).lean();
 
-        // fetch user profile
-        const user = await UserProfile.findOne({ githubUsername: username }).lean();
-
-        if (!user) return res.status(400).json({ message: "Profile not analyzed yet" });
-
-        const report = await AnalysisReport.findOne({
-            userId: user._id,
-        })
-            .sort({ analyzedAt: -1 })
-            .lean();
-
-        if (!report) return res.status(400).json({ message: "No analysisi report found" });
-
-        res.json({
-            profile: {
-                username: user.githubUsername,
-                fullName: user.fullName,
-                avatar: user.avatarUrl,
-                bio: user.bio,
-                location: user.location,
-                company: user.company,
-                website: user.website,
-                twitter: user.twitter,
-                accountAgeYears: user.accountAgeYears,
-                profileCompleteness: user.profileCompleteness,
-                followers: user.followers,
-                stars: user.stars,
-                languages: user.languages,
-            },
-
-            report: {
-                overallScore: report.overallScore,
-                level: report.level,
-                categoryScores: report.categoryScores,
-
-                repositories: report.repositories,
-                commits: report.commits,
-                streak: report.streak,
-                weekdayActivity: report.weekdayActivity,
-                monthlyHeatmap: report.monthlyHeatmap,
-
-                analyzedAt: report.analyzedAt,
-            },
-        });
-
-    }catch(err){
-        console.error("error:",err);
-        next(err);
+    if (!user) {
+      return res.status(404).json({ message: "User not analyzed yet" });
     }
-};
 
+    const report = await AnalysisReport.findOne({
+      userId: user._id,
+    })
+      .sort({ analyzedAt: -1 })
+      .lean();
+
+    if (!report) {
+      return res.status(404).json({ message: "No report found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      profile: {
+        username: user.githubUsername,
+        fullName: user.fullName,
+        avatar: user.avatarUrl,
+        bio: user.bio,
+        location: user.location,
+        company: user.company,
+        website: user.website,
+        twitter: user.twitter,
+        accountAgeYears: user.accountAgeYears,
+        profileCompleteness: user.profileCompleteness,
+      },
+      report,
+    });
+  } catch (err) {
+    console.error("Result fetch error:", err);
+    next(err);
+  }
+};
