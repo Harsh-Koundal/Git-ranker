@@ -20,7 +20,7 @@ export default function Result() {
     setError('');
 
     try {
-      const response = await axios.get(`http://localhost:5025/api/v1/result/${username}`);
+      const response = await axios.get(`${import.meta.env?.VITE_API_URL || 'http://localhost:5025'}/api/v1/result/${username}`);
 
       const data = await response.data;
       console.log('API Response:', data);
@@ -99,7 +99,8 @@ export default function Result() {
           last7days: data.report.commits?.last7days || 0,
           last30days: data.report.commits?.last30days || 0,
           last90days: data.report.commits?.last90days || 0,
-          last365days: data.report.commits?.last365days || 0,
+          last365days: data.report.commits?.
+            contributionsLast365Days || 0,
           perDay: data.report.commits?.perDayAverage || 0,
           firstCommit: data.report.commits?.firstCommitDate || "N/A",
           lastCommit: data.report.commits?.lastCommitDate || "N/A"

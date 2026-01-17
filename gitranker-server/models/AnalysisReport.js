@@ -37,6 +37,7 @@ const AnalysisReportsSchema = new mongoose.Schema(
       ref: "UserProfile",
       required: true,
       index: true,
+      unique: true,
     },
 
     overallScore: Number,
@@ -65,7 +66,7 @@ const AnalysisReportsSchema = new mongoose.Schema(
     stars: {
       total: Number,
       avgPerRepo: Number,
-      topRepos: [TopRepoSchema], 
+      topRepos: [TopRepoSchema],
       growthPercentage: Number, // optional future
     },
 
@@ -77,14 +78,16 @@ const AnalysisReportsSchema = new mongoose.Schema(
 
     commits: {
       total: Number,
+      totalCommitsOnly: Number,
+      contributionsLast365Days: Number,
+
       last7days: Number,
       last30days: Number,
       last90days: Number,
-      last365days: Number,
+
       perDayAverage: Number,
-      firstCommitDate: Date, // optional future
-      lastCommitDate: Date,  // optional future
     },
+
 
     streak: {
       current: Number,

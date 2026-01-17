@@ -126,10 +126,7 @@ export const normalizeLanguages = (repoLanguagesMap) => {
 
 
 // Commits & Activity
-export const normalizeCommits = (
-  contributionCalendar,
-  commitStats
-) => {
+export const normalizeCommits = (contributionCalendar, commitStats) => {
   const days = contributionCalendar.weeks.flatMap(
     (w) => w.contributionDays
   );
@@ -140,14 +137,25 @@ export const normalizeCommits = (
   const last365days = days.reduce((s, d) => s + d.contributionCount, 0);
 
   return {
-    total: commitStats.totalCommitContributions,
+    // ✅ WHAT USERS EXPECT AS “TOTAL”
+    total: Math.max(
+      commitStats.totalCommitContributions ?? 0,
+      last365days
+    ),
+
+    // ✅ TRANSPARENT BREAKDOWN
+    totalCommitsOnly: commitStats.totalCommitContributions ?? 0,
+    contributionsLast365Days: last365days,
+
     last7days,
     last30days,
     last90days,
-    last365days,
+
     perDayAverage: Math.round(last365days / 365),
   };
 };
+
+
 
 // Streaks & Consistency
 export const normalizeStreaks = (calendar) => {

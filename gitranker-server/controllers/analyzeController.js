@@ -76,7 +76,7 @@ export const analyzeGithubProfile = async (req, res, next) => {
           ]);
           allPRs.push(...prs);
           allIssues.push(...issues);
-        } catch {}
+        } catch { }
       })
     );
 
@@ -117,8 +117,8 @@ export const analyzeGithubProfile = async (req, res, next) => {
         activeDaysPercentage >= 75
           ? "Excellent"
           : activeDaysPercentage >= 50
-          ? "Good"
-          : "Low",
+            ? "Good"
+            : "Low",
       trend: "stable",
     };
 
@@ -144,22 +144,27 @@ export const analyzeGithubProfile = async (req, res, next) => {
       { upsert: true, new: true }
     );
 
-    const report = await AnalysisReport.create({
-      userId: user._id,
-      overallScore: scoreReport.overallScore,
-      level: scoreReport.level,
-      categoryScores: scoreReport.categoryScores,
-      repositories: repos,
-      stars,
-      followers,
-      commits,
-      streak,
-      activity,
-      languages,
-      pullRequests,
-      issues,
-      analyzedAt: new Date(),
-    });
+    const report = await AnalysisReport.findOneAndUpdate(
+      { userId: user._id },
+      {
+        userId: user._id,
+        overallScore: scoreReport.overallScore,
+        level: scoreReport.level,
+        categoryScores: scoreReport.categoryScores,
+        repositories: repos,
+        stars,
+        followers,
+        commits,
+        streak,
+        activity,
+        languages,
+        pullRequests,
+        issues,
+        analyzedAt: new Date(),
+      },
+      { upsert: true, new: true }
+    );
+
 
     const leaderboardData = await AnalysisReport.aggregate([
       { $sort: { analyzedAt: -1 } },

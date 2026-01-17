@@ -1,70 +1,64 @@
-import UserProfile from "../models/UserProfile.js";
 import AnalysisReport from "../models/AnalysisReport.js";
 
-const calculateTrend = (current, previous) => {
-    if (!previous) return { trend: "same", value: 0 };
-    if (current > previous) return { trend: "up", value: current - previous };
-    if (current < previous) return { trend: "down", value: previous - current };
-    return { trend: "same", value: 0 };
-};
-
-// Get Global Leaderboard
 export const getGlobalLeaderboard = async ({
-    page = 1,
-    limit = 20,
-    language,
-    country,
+  page = 1,
+  limit = 20,
+  language,
+  country,
 }) => {
-    const skip = (page - 1) * limit;
+  const skip = (page - 1) * limit;
 
-    const reports = await AnalysisReport.aggregate([
-        { $sort: { analyzedAt: -1 } },
-        {
-            $group: {
-                _id: "$userId",
-                latestReport: { $first: "$$ROOT" },
-            },
-        },
-        { $replaceRoot: { newRoot: "$latestReport" } },
-        { $sort: { overallScore: -1 } },
-        { $skip: skip },
-        { $limit: Number(limit) },
-    ]);
+  const pipeline = [
+    { $sort: { analyzedAt: -1 } },
 
-  const userIds = reports.map((r) => r.userId);
+    {
+      $group: {
+        _id: "$userId",
+        report: { $first: "$$ROOT" },
+      },
+    },
 
-  const users = await UserProfile.find({
-    _id: { $in: userIds },
-  }).lean();
+    { $replaceRoot: { newRoot: "$report" } },
 
-  const userMap = {};
-  users.forEach((u) => (userMap[u._id] = u));
+    { $sort: { overallScore: -1 } },
 
+    { $skip: skip },
+    { $limit: limit },
 
-  const Leaderboard = reports.map((report,index)=>{
-    const user = userMap[report.userId];
+    {
+      $lookup: {
+        from: "userprofiles",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
 
-    const previousReport = null;
+    { $unwind: "$user" },
+  ];
 
-    const trend = calculateTrend(
-        report.overallScore,
-        previousReport?.overallScore
-    );
+  const data = await AnalysisReport.aggregate(pipeline);
 
-    return{
-        rank: skip + index + 1,
-      username: user.githubUsername,
-      name: user.fullName,
-      avatar: user.avatarUrl,
-      location: user.location,
-      score: report.overallScore,
-      level: report.level,
-      language: user.languages?.[0]?.name || "Unknown",
-      trend: trend.trend,
-      trendValue: trend.value,
-      repos: report.repositories.total,
-      stars: user.stars.total,
-      commits: report.commits.total,
-    }
-  })
-}
+  return data.map((report, index) => ({
+    userId: report.user._id,
+    rank: skip + index + 1,
+
+    name: report.user.fullName || report.user.githubUsername,
+    username: report.user.githubUsername,
+    avatarUrl: report.user.avatarUrl,
+    location: report.user.location || "Unknown",
+
+    score: report.overallScore,
+    level: report.level,
+
+    repos: report.repositories?.total ?? 0,
+    stars: report.stars?.total ?? 0,
+    commits: report.commits?.total ?? 0,
+
+    primaryLanguage: report.languages?.[0]?.name ?? "Unknown",
+
+    trend: "same",
+    trendValue: 0,
+    badges: ["⭐"],
+  }));
+};
