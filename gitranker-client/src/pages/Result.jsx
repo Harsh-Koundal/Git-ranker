@@ -144,9 +144,6 @@ export default function Result() {
 
         contributionHeatmap: data.report.monthlyHeatmap || [],
 
-        strengths: generateStrengths(data),
-        weaknesses: generateWeaknesses(data),
-        suggestions: generateSuggestions(data)
       };
 
       setProfileData(transformedData);
@@ -156,80 +153,6 @@ export default function Result() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateStrengths = (data) => {
-    const strengths = [];
-    const report = data.report;
-
-    if (report.streak?.current > 30) {
-      strengths.push(`Exceptional consistency with ${report.streak.current}-day active streak`);
-    }
-
-    if (report.languages?.length > 0) {
-      const topLang = report.languages[0];
-      strengths.push(`Strong ${topLang.name} expertise with ${topLang.percentage}% contribution`);
-    }
-
-    if (report.pullRequests?.acceptanceRate > 80) {
-      strengths.push(`Excellent open-source engagement with ${report.pullRequests.acceptanceRate}% PR acceptance rate`);
-    }
-
-    if (data.profile.profileCompleteness?.score > 80) {
-      strengths.push("Well-maintained profile with complete documentation");
-    }
-
-    if (report.commits?.perDayAverage > 5) {
-      strengths.push(`High productivity with ${report.commits.perDayAverage} commits per day`);
-    }
-
-    return strengths.length > 0 ? strengths : ["Continue building your GitHub presence"];
-  };
-
-  const generateWeaknesses = (data) => {
-    const weaknesses = [];
-    const report = data.report;
-
-    if (report.repositories?.total < 10) {
-      weaknesses.push("Could increase repository diversity");
-    }
-
-    if (report.commits?.perDayAverage < 2) {
-      weaknesses.push("Consider increasing daily commit frequency");
-    }
-
-    if (report.pullRequests?.externalRepos < 10) {
-      weaknesses.push("Limited contributions to external projects");
-    }
-
-    if (data.profile.profileCompleteness?.score < 50) {
-      weaknesses.push("Profile could be more complete");
-    }
-
-    return weaknesses.length > 0 ? weaknesses : ["Keep up the great work!"];
-  };
-
-  const generateSuggestions = (data) => {
-    const suggestions = [];
-    const report = data.report;
-
-    if (report.streak?.current > 0 && report.streak.current < 30) {
-      suggestions.push("Maintain your consistency streak - you're building momentum!");
-    }
-
-    suggestions.push("Consider contributing to more high-impact open source projects");
-
-    if (report.languages?.length < 3) {
-      suggestions.push("Explore adding more languages to broaden your skill set");
-    }
-
-    if (data.profile.profileCompleteness?.score < 80) {
-      suggestions.push("Complete your profile with README and pinned repositories");
-    }
-
-    suggestions.push("Document your projects with comprehensive README files");
-
-    return suggestions;
   };
 
   if (loading) {
@@ -278,7 +201,6 @@ export default function Result() {
     { id: 'activity', label: 'Activity', icon: <Activity className="w-4 h-4" /> },
     { id: 'quality', label: 'Quality', icon: <Target className="w-4 h-4" /> },
     { id: 'impact', label: 'Impact', icon: <Trophy className="w-4 h-4" /> },
-    { id: 'insights', label: 'Insights', icon: <Brain className="w-4 h-4" /> }
   ];
 
   return (
@@ -604,11 +526,6 @@ export default function Result() {
                   </div>
                 ))}
               </div>
-
-              <div className="flex justify-between text-sm text-gray-400">
-                <span>First commit: {profileData.commits.firstCommit}</span>
-                <span>Last commit: {profileData.commits.lastCommit}</span>
-              </div>
             </div>
 
             {/* Weekday Activity */}
@@ -823,96 +740,61 @@ export default function Result() {
             </div>
           </div>
         )}
-
-        {activeTab === 'insights' && (
-          <div className="space-y-8">
-            {/* AI Insights */}
-            <div className="p-8 rounded-3xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                  <Brain className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold">AI-Powered Insights</h3>
-                  <p className="text-sm text-gray-400">Analysis based on your activity</p>
-                </div>
-              </div>
-
-              {/* Strengths */}
-              <div className="mb-8">
-                <h4 className="text-lg font-bold mb-4 flex items-center gap-2 text-green-400">
-                  <CheckCircle className="w-5 h-5" />
-                  Your Strengths
-                </h4>
-                <div className="space-y-3">
-                  {profileData.strengths.map((strength, i) => (
-                    <div key={i} className="flex gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-                      <Sparkles className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm leading-relaxed">{strength}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Weaknesses */}
-              <div className="mb-8">
-                <h4 className="text-lg font-bold mb-4 flex items-center gap-2 text-orange-400">
-                  <AlertCircle className="w-5 h-5" />
-                  Areas for Improvement
-                </h4>
-                <div className="space-y-3">
-                  {profileData.weaknesses.map((weakness, i) => (
-                    <div key={i} className="flex gap-3 p-4 rounded-xl bg-orange-500/10 border border-orange-500/20">
-                      <TrendingDown className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm leading-relaxed">{weakness}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Suggestions */}
-              <div>
-                <h4 className="text-lg font-bold mb-4 flex items-center gap-2 text-blue-400">
-                  <Zap className="w-5 h-5" />
-                  Personalized Suggestions
-                </h4>
-                <div className="space-y-3">
-                  {profileData.suggestions.map((suggestion, i) => (
-                    <div key={i} className="flex gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                      <ChevronRight className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
-                      <p className="text-sm leading-relaxed">{suggestion}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Footer */}
+      {/* Leaderboard Position */}
       <div className="border-t border-white/10 bg-black/40 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 py-12">
-          <div className="text-center">
-            <h3 className="text-3xl font-bold mb-4">Share Your Achievement</h3>
-            <p className="text-gray-400 mb-6">Show the world your GitHub performance</p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 font-semibold transition-all flex items-center gap-2">
-                <Share2 className="w-5 h-5" />
-                Share on Twitter
-              </button>
-              <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-semibold transition-all flex items-center gap-2">
-                <Download className="w-5 h-5" />
-                Download Report
-              </button>
-              <a href={`https://github.com/${profileData.username}`} target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 font-semibold transition-all flex items-center gap-2">
-                <ExternalLink className="w-5 h-5" />
-                View on GitHub
-              </a>
+          <div className="max-w-3xl mx-auto p-8 rounded-3xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/30 text-center">
+
+            <div className="flex justify-center mb-4">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Trophy className="w-8 h-8 text-white" />
+              </div>
             </div>
+
+            <h3 className="text-3xl font-black mb-2">
+              Leaderboard Position
+            </h3>
+
+            <p className="text-gray-400 mb-8">
+              Your current standing among all analyzed GitHub developers
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                <div className="text-4xl font-black text-purple-400">
+                  #{profileData.globalRank}
+                </div>
+                <div className="text-sm text-gray-400 mt-1">Global Rank</div>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                <div className="text-4xl font-black text-pink-400">
+                  {profileData.overallScore}
+                </div>
+                <div className="text-sm text-gray-400 mt-1">Score</div>
+              </div>
+
+              <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
+                <div className="text-2xl font-bold text-green-400 capitalize">
+                  {profileData.level}
+                </div>
+                <div className="text-sm text-gray-400 mt-1">Level</div>
+              </div>
+            </div>
+
+            <a
+              href="/leaderboard"
+              className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-bold transition-all"
+            >
+              View Full Leaderboard
+              <ArrowUpRight className="w-5 h-5" />
+            </a>
           </div>
         </div>
       </div>
+
     </div>
   );
 }
