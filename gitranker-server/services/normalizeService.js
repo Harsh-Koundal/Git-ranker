@@ -116,7 +116,7 @@ export const normalizeLanguages = (repoLanguagesMap) => {
     .map(([name, bytes]) => ({
       name,
       percentage: totalBytes
-        ? Math.round((bytes / totalBytes) * 100)
+        ? Number(((bytes / totalBytes) * 100).toFixed(2))
         : 0,
       bytes, 
       color: "from-purple-500 to-pink-500",
