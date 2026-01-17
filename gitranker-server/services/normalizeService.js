@@ -159,30 +159,39 @@ export const normalizeCommits = (contributionCalendar, commitStats) => {
 
 // Streaks & Consistency
 export const normalizeStreaks = (calendar) => {
-  let current = 0;
+  const days = calendar.weeks.flatMap(w => w.contributionDays);
+
   let longest = 0;
   let temp = 0;
 
-  calendar.weeks.forEach((week) => {
-    week.contributionDays.forEach((day) => {
-      if (day.contributionCount > 0) {
-        temp++;
-        longest = Math.max(longest, temp);
-      } else {
-        temp = 0;
-      }
-    });
-  });
+  // Longest streak (historical)
+  for (const day of days) {
+    if (day.contributionCount > 0) {
+      temp++;
+      longest = Math.max(longest, temp);
+    } else {
+      temp = 0;
+    }
+  }
 
-  current = temp;
+  // Current streak (from today backwards)
+  let current = 0;
+  for (let i = days.length - 1; i >= 0; i--) {
+    if (days[i].contributionCount > 0) {
+      current++;
+    } else {
+      break;
+    }
+  }
 
   return {
     current,
     longest,
     average: Math.round(longest / 3),
-    breaks: calendar.weeks.length * 7 - longest,
+    breaks: days.length - longest,
   };
 };
+
 
 // Weekday Activity
 export const normalizeWeekdayActivity = (calendar) => {

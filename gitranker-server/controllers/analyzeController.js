@@ -110,17 +110,21 @@ export const analyzeGithubProfile = async (req, res, next) => {
       (activeDays / allDays.length) * 100
     );
 
+    let consistencyLabel = "Low";
+
+    if (streak.current >= 60) {
+      consistencyLabel = "Excellent";
+    } else if (streak.current >= 30 || activeDaysPercentage >= 50) {
+      consistencyLabel = "Good";
+    }
+
     const activity = {
       activeDaysPercentage,
       inactiveDaysPercentage: 100 - activeDaysPercentage,
-      consistencyLabel:
-        activeDaysPercentage >= 75
-          ? "Excellent"
-          : activeDaysPercentage >= 50
-            ? "Good"
-            : "Low",
+      consistencyLabel,
       trend: "stable",
     };
+
 
     const scoreReport = generateScoreReport({
       commits,
