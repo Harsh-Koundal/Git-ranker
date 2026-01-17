@@ -26,6 +26,7 @@ import { generateScoreReport } from "../services/scoreService.js";
 
 import UserProfile from "../models/UserProfile.js";
 import AnalysisReport from "../models/AnalysisReport.js";
+import LeaderboardSnapshot from "../models/LeaderboardSnapshot.js";
 
 export const analyzeGithubProfile = async (req, res, next) => {
   try {
@@ -35,7 +36,6 @@ export const analyzeGithubProfile = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid GitHub username" });
     }
 
-    /* ===================== FETCH CORE DATA ===================== */
     const [
       githubUser,
       repositories,
@@ -50,7 +50,6 @@ export const analyzeGithubProfile = async (req, res, next) => {
       fetchFollowers(username),
     ]);
 
-    /* ===================== LANGUAGES ===================== */
     const repoLanguagesMap = {};
     await Promise.all(
       repositories.map(async (repo) => {
@@ -65,7 +64,6 @@ export const analyzeGithubProfile = async (req, res, next) => {
       })
     );
 
-    /* ===================== PRs & ISSUES ===================== */
     const allPRs = [];
     const allIssues = [];
 
@@ -82,7 +80,6 @@ export const analyzeGithubProfile = async (req, res, next) => {
       })
     );
 
-    /* ===================== NORMALIZATION ===================== */
     const profile = normalizeUserProfile(githubUser);
     const profileCompleteness = normalizeProfileCompleteness(githubUser);
 
@@ -101,7 +98,6 @@ export const analyzeGithubProfile = async (req, res, next) => {
     const pullRequests = normalizePullRequests(allPRs);
     const issues = normalizeIssues(allIssues);
 
-    /* ===================== ACTIVITY ===================== */
     const allDays = contributionCalendar.weeks.flatMap(
       (w) => w.contributionDays
     );
@@ -126,7 +122,6 @@ export const analyzeGithubProfile = async (req, res, next) => {
       trend: "stable",
     };
 
-    /* ===================== SCORING ===================== */
     const scoreReport = generateScoreReport({
       commits,
       streak,
@@ -137,7 +132,6 @@ export const analyzeGithubProfile = async (req, res, next) => {
       profileCompleteness,
     });
 
-    /* ===================== SAVE USER ===================== */
     const user = await UserProfile.findOneAndUpdate(
       { githubUsername: profile.githubUsername },
       {
@@ -150,14 +144,11 @@ export const analyzeGithubProfile = async (req, res, next) => {
       { upsert: true, new: true }
     );
 
-    /* ===================== SAVE REPORT ===================== */
     const report = await AnalysisReport.create({
       userId: user._id,
-
       overallScore: scoreReport.overallScore,
       level: scoreReport.level,
       categoryScores: scoreReport.categoryScores,
-
       repositories: repos,
       stars,
       followers,
@@ -167,15 +158,44 @@ export const analyzeGithubProfile = async (req, res, next) => {
       languages,
       pullRequests,
       issues,
-
       analyzedAt: new Date(),
     });
 
-    /* ===================== RESPONSE ===================== */
+    const leaderboardData = await AnalysisReport.aggregate([
+      { $sort: { analyzedAt: -1 } },
+      {
+        $group: {
+          _id: "$userId",
+          userId: { $first: "$userId" },
+          overallScore: { $first: "$overallScore" },
+          level: { $first: "$level" },
+        },
+      },
+      { $sort: { overallScore: -1 } },
+    ]);
+
+    await LeaderboardSnapshot.deleteMany({});
+
+    const leaderboardDocs = leaderboardData.map((u, index) => ({
+      userId: u.userId,
+      rank: index + 1,
+      score: u.overallScore,
+      level: u.level,
+    }));
+
+    await LeaderboardSnapshot.insertMany(leaderboardDocs);
+
+    const myRank =
+      leaderboardDocs.find(
+        (l) => l.userId.toString() === user._id.toString()
+      )?.rank ?? null;
+
     res.status(201).json({
       success: true,
       username: user.githubUsername,
-      reportId: report._id,
+      overallScore: report.overallScore,
+      level: report.level,
+      rank: myRank,
       analyzedAt: report.analyzedAt,
     });
   } catch (err) {
@@ -183,4 +203,3 @@ export const analyzeGithubProfile = async (req, res, next) => {
     next(err);
   }
 };
-
