@@ -17,6 +17,7 @@ const allowedOrigins = [
     "http://localhost:5173",
     "http://localhost:5025",
     "http://localhost:3020",
+    "https://git-ranker.onrender.com",
 ];
 
 app.use(
