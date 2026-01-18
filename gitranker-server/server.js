@@ -22,18 +22,21 @@ const allowedOrigins = [
 ];
 
 app.use(
-    cors({
-        origin:(origin,callback)=>{
-            if(!origin || allowedOrigins.includes(origin)){
-                callback(null, true);
-            }else{
-                console.error("Blocker by CORS:",origin);
-                callback(new Error("Not allowed by CORS"));
-            }
-        },
-        methods:["GET","POST","PUT","DELETE","PATCH"],
-    })
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.error("Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+  })
 );
+
 
 app.use(express.json());
 
