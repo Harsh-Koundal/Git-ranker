@@ -25,11 +25,8 @@ export default function Home() {
         setAnalysisResult(null);
 
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/analyze`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                data: { username: username.trim() },
+            const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/analyze`, {
+                username: username.trim(),
             });
 
             const data = response.data;
