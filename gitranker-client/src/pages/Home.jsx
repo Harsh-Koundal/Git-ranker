@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Github, TrendingUp, Award, Users, Code, Star, GitBranch, Activity, Globe, BarChart3, ChevronRight, Sparkles, Trophy, Target, Loader2, AlertCircle } from 'lucide-react';
+import axios from "axios";
 
 export default function Home() {
     const [username, setUsername] = useState('');
@@ -24,19 +25,14 @@ export default function Home() {
         setAnalysisResult(null);
 
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/analyze`, {
-                method: 'POST',
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/analyze`, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username: username.trim() }),
+                data: { username: username.trim() },
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.message || 'Analysis failed');
-            }
+            const data = response.data;
 
             setAnalysisResult(data);
             
